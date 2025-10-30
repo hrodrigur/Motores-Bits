@@ -1,4 +1,4 @@
-package es.unex.cum.mdai.Motores.Bits;
+package es.unex.cum.mdai.motoresbits;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -10,18 +10,11 @@ public class DetallePedidoId implements Serializable {
     private Long pedidoId;
     private Long productoId;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DetallePedidoId)) return false;
-        DetallePedidoId that = (DetallePedidoId) o;
-        return Objects.equals(pedidoId, that.pedidoId) &&
-                Objects.equals(productoId, that.productoId);
-    }
+    public DetallePedidoId() {}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(pedidoId, productoId);
+    public DetallePedidoId(Long pedidoId, Long productoId) {
+        this.pedidoId = pedidoId;
+        this.productoId = productoId;
     }
 
     public Long getPedidoId() {
@@ -38,5 +31,19 @@ public class DetallePedidoId implements Serializable {
 
     public void setProductoId(Long productoId) {
         this.productoId = productoId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DetallePedidoId)) return false;
+        DetallePedidoId that = (DetallePedidoId) o;
+        return Objects.equals(pedidoId, that.pedidoId) &&
+                Objects.equals(productoId, that.productoId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pedidoId, productoId);
     }
 }

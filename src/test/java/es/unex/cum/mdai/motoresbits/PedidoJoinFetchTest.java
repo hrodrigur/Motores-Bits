@@ -36,6 +36,9 @@ class PedidoJoinFetchTest {
         f.addLineaPersisted(pedido, p1, 1, p1.getPrecio());
         f.addLineaPersisted(pedido, p2, 1, p2.getPrecio());
 
+        // fuerza sincronización por cascada
+        pedidoRepository.saveAndFlush(pedido);
+
         // Diagnóstico
         assertThat(detalleRepo.count()).as("detalles en BD").isGreaterThanOrEqualTo(2);
         assertThat(pedido.getDetalles()).as("colección en memoria").hasSize(2);

@@ -28,6 +28,9 @@ class PedidoDetalleRepositoryTest extends BaseJpaTest {
         var pedido = f.newPedidoPersisted(u, new BigDecimal("25.00"), EstadoPedido.PENDIENTE);
         f.addLineaPersisted(pedido, prod, 2, prod.getPrecio());
 
+        // fuerza sincronización por cascada
+        pedidoRepository.saveAndFlush(pedido);
+
         var pedidosUsuario = pedidoRepository.findByUsuarioId(u.getId());
         var detalle = detallePedidoRepository.findByPedido_IdAndProducto_Id(
                 pedido.getId(), prod.getId()

@@ -32,7 +32,6 @@ public class Pedido implements Serializable {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
 
-    // --- Líneas del pedido (Set para evitar duplicados por PK compuesta) ---
     @OneToMany(
             mappedBy = "pedido",
             cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },
@@ -40,22 +39,15 @@ public class Pedido implements Serializable {
     )
     private Set<DetallePedido> detalles = new LinkedHashSet<>();
 
-    // ----------------------
-    // Métodos de dominio
-    // ----------------------
-    /**
-     * Crea y añade una línea al pedido.
-     * IMPORTANTE: lo normal es que este pedido ya esté guardado (tenga id)
-     * antes de llamar a este método, para que @MapsId sincronice la PK compuesta.
-     */
     public DetallePedido addLinea(Producto producto, int cantidad, BigDecimal precio) {
         DetallePedido d = new DetallePedido();
         d.setCantidad(cantidad);
         d.setPrecio(precio);
-        d.attach(this, producto);   // sincroniza pedido/producto y la PK (NO añade a la colección)
-        this.detalles.add(d);       // único sitio donde se añade a la colección
+        d.attach(this, producto);     // sincroniza PK compuesta
+        this.detalles.add(d);         // ÚNICO punto donde se añade
         return d;
     }
+
 
     public void removeLinea(DetallePedido detalle) {
         if (detalle != null) {

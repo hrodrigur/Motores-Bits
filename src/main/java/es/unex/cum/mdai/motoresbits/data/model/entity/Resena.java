@@ -20,6 +20,9 @@ public class Resena {
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
+    @jakarta.validation.constraints.Min(1)
+    @jakarta.validation.constraints.Max(5)
+    @Column(nullable = false)
     private Integer puntuacion;
 
     @Column(columnDefinition = "TEXT")

@@ -21,6 +21,7 @@ public class DetallePedido implements Serializable {
     @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
 
+    @jakarta.validation.constraints.Min(1)
     @Column(nullable = false)
     private Integer cantidad;
 
@@ -29,12 +30,12 @@ public class DetallePedido implements Serializable {
 
     public DetallePedido() {}
 
-    /** Enlaza pedido y producto y sincroniza la PK compuesta */
     public void attach(Pedido p, Producto pr) {
         this.pedido = p;
         this.producto = pr;
         if (p != null) this.id.setPedidoId(p.getId());
         if (pr != null) this.id.setProductoId(pr.getId());
+        // NO añadir a p.getDetalles() aquí
     }
 
     @Override
@@ -42,12 +43,12 @@ public class DetallePedido implements Serializable {
         if (this == o) return true;
         if (!(o instanceof DetallePedido)) return false;
         DetallePedido that = (DetallePedido) o;
-        return java.util.Objects.equals(this.id, that.id);
+        return java.util.Objects.equals(this.getId(), that.getId());
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(this.id);
+        return java.util.Objects.hash(this.getId());
     }
 
     // Getters / Setters

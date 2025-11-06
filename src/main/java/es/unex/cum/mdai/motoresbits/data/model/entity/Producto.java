@@ -3,6 +3,9 @@ package es.unex.cum.mdai.motoresbits.data.model.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "PRODUCTOS")
@@ -18,11 +21,14 @@ public class Producto {
     private Categoria categoria;
 
     private String nombre;
+    @Column(nullable = false, unique = true)
     private String referencia;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal precio;
 
+    @jakarta.validation.constraints.Min(0)
+    @Column(nullable = false)
     private Integer stock;
 
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)

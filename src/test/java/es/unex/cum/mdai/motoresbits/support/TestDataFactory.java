@@ -62,8 +62,8 @@ public class TestDataFactory {
     }
 
     /** Crea una línea en el pedido y la persiste (útil si no usas cascade PERSIST en Pedido.detalles) */
-    public DetallePedido addLineaPersisted(Pedido pedido, Producto producto, int cantidad, BigDecimal precio) {
-        var linea = pedido.addLinea(producto, cantidad, precio);
-        return detalleRepo.save(linea);
+    public DetallePedido addLineaPersisted(Pedido pedido, Producto producto, int c, BigDecimal precio) {
+        var linea = pedido.addLinea(producto, c, precio);
+        return linea;
     }
 }

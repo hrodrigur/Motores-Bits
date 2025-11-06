@@ -7,25 +7,20 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import es.unex.cum.mdai.motoresbits.data.model.entity.Categoria;
 import es.unex.cum.mdai.motoresbits.data.model.entity.Producto;
 import es.unex.cum.mdai.motoresbits.data.model.entity.Resena;
-import es.unex.cum.mdai.motoresbits.data.model.entity.Usuario;
-import es.unex.cum.mdai.motoresbits.data.model.enums.RolUsuario;
 import es.unex.cum.mdai.motoresbits.data.repository.CategoriaRepository;
 import es.unex.cum.mdai.motoresbits.data.repository.ProductoRepository;
 import es.unex.cum.mdai.motoresbits.data.repository.ResenaRepository;
 import es.unex.cum.mdai.motoresbits.data.repository.UsuarioRepository;
+import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
+import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@Transactional
-class UsuarioResenaRepositoryTest {
+class UsuarioResenaRepositoryTest extends BaseJpaTest {
 
+    @Autowired TestDataFactory f;
     @Autowired UsuarioRepository usuarioRepository;
     @Autowired CategoriaRepository categoriaRepository;
     @Autowired ProductoRepository productoRepository;
@@ -33,30 +28,12 @@ class UsuarioResenaRepositoryTest {
 
     @Test
     void crearUsuarioProductoYResena_y_buscarResenasPorProducto() {
-        // Usuario
-        var u = new Usuario();
-        u.setNombre("Ana");
-        u.setEmail("ana@test.com");
-        u.setContrasena("x");
-        try { u.setRol(RolUsuario.CLIENTE); } catch (Throwable ignored) {} // por si tu campo es String
-        usuarioRepository.save(u);
+        var u = f.newUsuarioPersisted();
 
-        // Producto (con categoría)
-        var c = new Categoria();
-        c.setNombre("Frenos");
-        c.setDescripcion("Piezas de freno");
-        categoriaRepository.save(c);
+        Categoria cat = f.newCategoriaPersisted("Frenos");
+        Producto p = f.newProductoPersisted(cat, "PF", new BigDecimal("19.95"));
 
-        var p = new Producto();
-        p.setNombre("Pastillas freno");
-        p.setReferencia("PF-001");
-        p.setPrecio(new BigDecimal("19.95"));
-        p.setStock(50);
-        p.setCategoria(c);
-        productoRepository.save(p);
-
-        // Reseña
-        var r = new Resena();
+        Resena r = new Resena();
         r.setUsuario(u);
         r.setProducto(p);
         r.setPuntuacion(5);
@@ -64,11 +41,9 @@ class UsuarioResenaRepositoryTest {
         try { r.setCreadaEn(LocalDateTime.now()); } catch (Throwable ignored) {}
         resenaRepository.save(r);
 
-        // when
         var resenas = resenaRepository.findByProductoId(p.getId());
 
-        // then
         assertThat(resenas).hasSize(1);
-        assertThat(resenas.get(0).getUsuario().getEmail()).isEqualTo("ana@test.com");
+        assertThat(resenas.get(0).getUsuario().getEmail()).isEqualTo(u.getEmail());
     }
 }

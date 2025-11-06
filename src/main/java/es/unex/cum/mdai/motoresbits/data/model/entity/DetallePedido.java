@@ -35,10 +35,19 @@ public class DetallePedido implements Serializable {
         this.producto = pr;
         if (p != null) this.id.setPedidoId(p.getId());
         if (pr != null) this.id.setProductoId(pr.getId());
-        // Si quieres mantener la bidireccionalidad desde Pedido:
-        if (p != null && p.getDetalles() != null && !p.getDetalles().contains(this)) {
-            p.getDetalles().add(this);
-        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DetallePedido)) return false;
+        DetallePedido that = (DetallePedido) o;
+        return java.util.Objects.equals(this.id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(this.id);
     }
 
     // Getters / Setters

@@ -39,24 +39,26 @@ El sistema cuenta con dos roles principales:
 -   Cliente: usuario que podrá explorar los objetos disponibles, filtrar
     por categorías y efectuar compras si lo desea.
 
-# Funcionalidades, Requisitos, "Pliego de condiciones"
+# Casos de Usos
 
-- Administrador
+### Cliente
+1. **Registrarse / Iniciar sesión**
+2. **Explorar catálogo por categoría**
+3. **Ver detalle de producto** (incluye reseñas)
+4. **Añadir al carro**
+5. **Checkout**
+    - Crea `PEDIDOS` (id_usuario, fec_pedido, total, estado="PENDIENTE").
+    - Crea `DETALLES_PEDIDO` (id_pedido, id_producto, cantidad, precio del momento).
+    - **Actualiza `PRODUCTOS.stock`**.
+6. **Ver mis pedidos**
+7. **Crear reseña** (puntuación 1–5)
 
-- El administrador puede crear, editar, eliminar y actualizar los distintos productos que tengamos.
-- El administrador puede  crear, editar, eliminar las distintas categorias que tengamos.
-- El administrador puede consultar y ver los detalles de los pedidos.
-- El administrador puede actualizar el estado en el que se encuentran los pedidos.
-- El administrador puede consultar, editar y eliminar el historial que tienen los distintos clientes.
-- El administrador puede ver, moderar y eliminar las distintas reseñas que los clientes pongan.
-
-- Cliente
-
-- Los clientes deben poder registrarse e iniciar sesión.
-- Los clientes pueden consultar las distintas categorias, buscar entre los productos y ver los detalles de los distintos productos.
-- Los clientes pueden añadir y eliminar los productos que deseen al carro.
-- Los clientes a la hora de realizar la compra hace un Checkout (el Checkout consiste en confirmar los productos que tengamos en el carro, una vez confirmados, el sistema crea un nuevo registro en la tabla pedidos con el id_usuario, fec_pedido, total y estado="Pendiente", el sistema debe crear uno o más registros en Detalles_Pedido uno por cada producto, vinculando id_pedido, id_producto, cantidad y el precio de ese momento. También se actualizará el Stock).
-- Los clientes pueden ver sus pedidos, escribir reseñas en ellos y ver las reseñas que han escrito.
+### Administrador
+8. **CRUD de categorías**
+9. **CRUD de productos** (referencia única; stock ≥ 0)
+10. **Consultar pedidos y su detalle**
+11. **Actualizar estado del pedido** (PENDIENTE→PAGADO→ENVIADO→ENTREGADO; CANCELADO con reposición de stock si procede)
+12. **Moderación de reseñas**
 
 ## Funcionalidades opcionales, recomendables o futuribles 
 
@@ -69,3 +71,77 @@ El sistema cuenta con dos roles principales:
 -   Multilenguaje para la interfaz de la aplicación.
   
 -   Posibilidad de que el cliente puede modificar su perfil.
+
+# DiagramaE/R
+
+<img src="diagramaER.png">
+
+## Explicacion diagramaE/R
+
+El diagrama representa un sistema de ventas para un taller, donde los usuarios realizan pedidos compuestos por varios productos.
+Los productos se organizan en categorías y pueden recibir reseñas de los usuarios, con puntuación y comentario.
+La relación entre pedidos y productos se resuelve con Detalles_Pedido, que guarda cantidad y el precio histórico de cada línea.
+
+### Tablas
+
+- USUARIOS (id_usuario PK)
+Campos: nombre, email, contrasena, rol.
+
+- CATEGORIAS (id_categoria PK)
+Campos: nombre, descripcion.
+
+- PRODUCTOS (id_producto PK, FK id_categoria)
+  Campos: nombre, referencia, precio, stock.
+  
+- PEDIDOS (id_pedido PK, FK id_usuario)
+  Campos: fec_pedido, total, estado.
+
+- Detalles_Pedido (FK id_pedido, FK id_producto)
+  Campos: cantidad, precio.
+
+- RESEÑAS (id_reseña PK, FK id_producto, FK id_usuario)
+  Campos: puntuacion, comentario.
+
+### Relaciones (cardinalidades)
+
+- Usuarios 1—N Pedidos: un usuario puede tener muchos pedidos; cada pedido pertenece a un usuario.
+- Usuarios 1—N Reseñas: un usuario puede escribir muchas reseñas.
+- Productos 1—N Reseñas: un producto puede recibir muchas reseñas.
+- Categorías 1—N Productos: una categoría agrupa varios productos.
+- Pedidos N—N Productos a través de Detalles_Pedido: un pedido tiene varios productos y un producto puede aparecer en muchos pedidos.
+
+## Explicacion de docker con MariaDB
+
+Aqui se va a explicar como crear un docker con la imagen de MariaDB
+
+1. Tener descargado la aplicacion de docker en el dispositivo y funcionando.
+2. Descargar la imagen de MariaDB (si no la tienes)
+```bash
+  docker pull mariadb:latest
+```
+3. Crear el contenedor con el nombre motores_bits
+```bash
+  docker run -d --name motores_bits -e MYSQL_ROOT_PASSWORD=proyectomdai -e MYSQL_DATABASE=MotoresBits -p 3306:3306 mariadb:latest
+```
+4. Verificar que el contenedor está corriendo
+```bash
+  docker ps
+```
+## Reglas y validaciones
+- `Usuario.email` **único**.
+- `Producto.referencia` **única**; `stock ≥ 0`.
+- `DetallePedido.cantidad ≥ 1`.
+- `Resena.puntuacion` ∈ [1..5].
+- Estados de pedido con transiciones válidas.
+
+## Flujo de Checkout 
+1. Cliente confirma carro → **calcular total**.
+2. Crear `PEDIDO` (estado = `PENDIENTE`).
+3. Por cada ítem: crear `DETALLE_PEDIDO` con **precio snapshot** y **cantidad**, y **descontar stock**.
+4. Devolver nº de pedido.
+5. Admin puede **actualizar estado** posteriormente.
+
+## Tecnología / Tests
+- Spring Boot, JPA/Hibernate.
+- BBDD de desarrollo/tests: **H2**; producción: MariaDB.
+- Tests de integración con perfil `test` y **fábrica de datos** (H2 en memoria).

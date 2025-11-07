@@ -145,3 +145,13 @@ Aqui se va a explicar como crear un docker con la imagen de MariaDB
 - Spring Boot, JPA/Hibernate.
 - BBDD de desarrollo/tests: **H2**; producción: MariaDB.
 - Tests de integración con perfil `test` y **fábrica de datos** (H2 en memoria).
+
+## Explicacion Test
+
+- AdminUseCasesTest: valida los casos de uso del administrador, CRUD de categorías y productos, consulta de pedido con sus líneas/productos.
+- GeneralSmokeTests: alta de usuarios con unicidad de email, catálogo (listado por categoría y bloqueo de referencias duplicadas), reseñas (rango válido y media) y checkout.
+- PedidosRepositoryTest: crea un pedido con líneas y verifica consultas por usuario y producto.
+- ProductosCategoriasRepositoryTest: lista productos por categoría y verifica que la referencia del producto es única.
+- ResenasRepositoryTest: crea y lista reseñas por producto, valida el rango 1–5 (guardar 6, lanza ConstraintViolationException) y calcula la media de puntuaciones por producto.
+- UsuariosRepositoryTest: verifica la unicidad del email. Crea un usuario y al intentar guardar otro con el mismo email espera DataIntegrityViolationException usando TestDataFactory para el dato inicial.
+- UsuarioUseCasesTest: registro (éxito y email duplicado) y login (correcto, email inexistente y contraseña incorrecta simulada).

@@ -15,12 +15,17 @@ import es.unex.cum.mdai.motoresbits.data.repository.PedidoRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
+/**
+ * Pruebas centradas en el repositorio de `Pedido` y en el manejo de líneas (DetallePedido).
+ * Comprueban consultas por usuario, operaciones JOIN FETCH y comportamiento de orphanRemoval.
+ */
 class PedidosRepositoryTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
     @Autowired PedidoRepository pedidoRepo;
     @Autowired DetallePedidoRepository detalleRepo;
 
+    // Crear un pedido con una línea y verificar consultas por usuario y por producto.
     @Test
     void crearPedidoConLinea_y_consultarPorUsuarioYProducto() {
         var u = f.newUsuarioPersisted();
@@ -40,6 +45,7 @@ class PedidosRepositoryTest extends BaseJpaTest {
         assertThat(detalle.get().getPrecio()).isEqualByComparingTo("12.50");
     }
 
+    // Verificar método JOIN FETCH que recupera pedido junto con sus líneas y productos.
     @Test
     void joinFetch_pedidoConLineasYProductos() {
         var u = f.newUsuarioPersisted();
@@ -66,6 +72,7 @@ class PedidosRepositoryTest extends BaseJpaTest {
         });
     }
 
+    // Probar orphanRemoval: quitar la línea del pedido debe eliminarla de la BD.
     @Test
     void orphanRemoval_quitarLineaBorraEnBD() {
         var u = f.newUsuarioPersisted();

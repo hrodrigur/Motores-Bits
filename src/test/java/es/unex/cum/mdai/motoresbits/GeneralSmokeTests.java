@@ -31,6 +31,11 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.validation.ConstraintViolationException;
 import org.assertj.core.data.Offset;
 
+/**
+ * Pruebas de humo generales que cubren los flujos más importantes: registro/login,
+ * operaciones CRUD y validaciones. Están diseñadas para detectar regresiones
+ * en las capas de persistencia y en las restricciones (unicidad, validaciones).
+ */
 class GeneralSmokeTests extends BaseJpaTest {
 
     @Autowired TestDataFactory f;

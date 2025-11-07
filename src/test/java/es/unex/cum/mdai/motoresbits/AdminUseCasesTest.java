@@ -21,6 +21,14 @@ import es.unex.cum.mdai.motoresbits.data.repository.UsuarioRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
+/**
+ * Conjunto de pruebas relacionadas con los casos de uso del rol ADMIN.
+ *
+ * Estas pruebas ejercitan las operaciones CRUD y flujos típicos que un
+ * administrador necesita: gestión de categorías, productos, pedidos y
+ * moderación de reseñas. Los tests usan la factory de test para crear
+ * datos y validan tanto persistencia como reglas de negocio básicas.
+ */
 class AdminUseCasesTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
@@ -30,7 +38,8 @@ class AdminUseCasesTest extends BaseJpaTest {
     @Autowired UsuarioRepository usuarioRepo;
     @Autowired ResenaRepository resenaRepo;
 
-    // CU-Admin 01: CRUD de Categorías (crear, actualizar, listar, eliminar SIN productos colgando)
+    // Prueba: flujo CRUD básico sobre Categoría. Verifica creación, lectura,
+    // actualización y eliminación cuando no existen dependencias (productos).
     @Test
     void categoria_crud_basico() {
         // crear
@@ -54,7 +63,9 @@ class AdminUseCasesTest extends BaseJpaTest {
         assertThat(categoriaRepo.findById(cat.getId())).isEmpty();
     }
 
-    // CU-Admin 02: CRUD de Productos (crear, actualizar precio/stock, listar por categoría)
+    // Prueba: gestión de productos. Cubre creación, actualización de precio/stock,
+    // listado por categoría y eliminación. Asegura que los repositorios funcionan
+    // según contrato y que los campos obligatorios se persistien correctamente.
     @Test
     void producto_crud_y_listado_por_categoria() {
         var cat = f.newCategoriaPersisted("Aceites");
@@ -87,7 +98,9 @@ class AdminUseCasesTest extends BaseJpaTest {
         assertThat(productoRepo.findById(p.getId())).isEmpty();
     }
 
-    // CU-Admin 03: Consultar Pedido y su Detalle (maestro-detalle con JOIN FETCH)
+    // Prueba: recuperación de pedido con sus líneas y datos de producto (maestro-detalle).
+    // Valida que el método con JOIN FETCH devuelve las entidades relacionadas y que
+    // las líneas persisten por cascada cuando se añade al pedido.
     @Test
     void pedido_maestro_detalle_con_lineas_y_productos() {
         var u = f.newUsuarioPersisted();
@@ -115,7 +128,8 @@ class AdminUseCasesTest extends BaseJpaTest {
         });
     }
 
-    // CU-Admin 04: Actualizar estado de Pedido (workflow básico)
+    // Prueba: transición de estados de un pedido. Verifica que el flujo PENDIENTE ->
+    // PAGADO -> ENVIADO -> ENTREGADO se aplica correctamente y se persiste.
     @Test
     void pedido_actualizar_estado() {
         var u = f.newUsuarioPersisted();
@@ -145,7 +159,9 @@ class AdminUseCasesTest extends BaseJpaTest {
                 .isEqualTo(EstadoPedido.ENTREGADO);
     }
 
-    // CU-Admin 05: Moderación de reseñas (editar y eliminar)
+    // Prueba: moderación de reseñas. Cubre creación, edición y eliminación de una reseña.
+    // Útil para verificar que el repositorio de reseñas respeta las restricciones y permite
+    // operaciones básicas de moderador.
     @Test
     void moderar_resenas_editar_y_eliminar() {
         var u = f.newUsuarioPersisted();

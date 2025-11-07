@@ -16,6 +16,10 @@ import es.unex.cum.mdai.motoresbits.data.repository.ProductoRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
+/**
+ * Tests para repositorios `Producto` y `Categoria`.
+ * Validaciones: listado por categoría y restricción de unicidad en la referencia.
+ */
 class ProductosCategoriasRepositoryTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;

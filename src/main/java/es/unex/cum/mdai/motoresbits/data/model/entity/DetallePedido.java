@@ -1,71 +1,73 @@
 package es.unex.cum.mdai.motoresbits.data.model.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Entity
 @Table(name = "DETALLES_PEDIDO")
 public class DetallePedido implements Serializable {
 
     @EmbeddedId
-    private DetallePedidoId id = new DetallePedidoId(); // <- inicializada
+    private DetallePedidoId id = new DetallePedidoId();
 
-    @MapsId("pedidoId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_pedido", nullable = false)
+    @MapsId("pedidoId")
+    @JoinColumn(
+            name = "id_pedido",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_detalle_pedido")
+    )
     private Pedido pedido;
 
-    @MapsId("productoId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_producto", nullable = false)
+    @MapsId("productoId")
+    @JoinColumn(
+            name = "id_producto",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_detalle_producto")
+    )
     private Producto producto;
 
-    @jakarta.validation.constraints.Min(1)
+    @Min(1)
     @Column(nullable = false)
     private Integer cantidad;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    public DetallePedido() {}
-
+    /** Sincroniza relaciones y la PK compuesta. No añade a colecciones. */
     public void attach(Pedido p, Producto pr) {
         this.pedido = p;
         this.producto = pr;
-        if (p != null) this.id.setPedidoId(p.getId());
-        if (pr != null) this.id.setProductoId(pr.getId());
-        // NO añadir a p.getDetalles() aquí
+        if (p != null) this.id.setPedidoId(p.getId()); else this.id.setPedidoId(null);
+        if (pr != null) this.id.setProductoId(pr.getId()); else this.id.setProductoId(null);
     }
 
-    @Override
-    public boolean equals(Object o) {
+    // equals/hashCode por id compuesta (para Set<> en Pedido)
+    @Override public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof DetallePedido)) return false;
-        DetallePedido that = (DetallePedido) o;
-        return java.util.Objects.equals(this.getId(), that.getId());
+        return Objects.equals(this.id, ((DetallePedido)o).id);
     }
-
-    @Override
-    public int hashCode() {
-        return java.util.Objects.hash(this.getId());
-    }
+    @Override public int hashCode() { return Objects.hash(this.id); }
 
     // Getters / Setters
-
     public DetallePedidoId getId() { return id; }
     public void setId(DetallePedidoId id) { this.id = id; }
 
     public Pedido getPedido() { return pedido; }
     public void setPedido(Pedido pedido) {
         this.pedido = pedido;
-        if (pedido != null) this.id.setPedidoId(pedido.getId());
+        this.id.setPedidoId(pedido != null ? pedido.getId() : null);
     }
 
     public Producto getProducto() { return producto; }
     public void setProducto(Producto producto) {
         this.producto = producto;
-        if (producto != null) this.id.setProductoId(producto.getId());
+        this.id.setProductoId(producto != null ? producto.getId() : null);
     }
 
     public Integer getCantidad() { return cantidad; }

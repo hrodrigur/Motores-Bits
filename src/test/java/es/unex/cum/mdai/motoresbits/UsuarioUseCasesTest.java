@@ -13,6 +13,10 @@ import es.unex.cum.mdai.motoresbits.data.repository.UsuarioRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
+/**
+ * Casos de uso relacionados con usuarios: registro, unicidad de email y login
+ * (simulado sin encoder). Los tests validan el contrato del repositorio de usuarios.
+ */
 class UsuarioUseCasesTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;

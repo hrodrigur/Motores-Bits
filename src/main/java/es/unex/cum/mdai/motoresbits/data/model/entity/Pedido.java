@@ -16,12 +16,12 @@ public class Pedido implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // --- Relación con Usuario ---
+    // Usuario
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_usuario", nullable = false)
+    @JoinColumn(name = "id_usuario", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_pedido_usuario"))
     private Usuario usuario;
 
-    // --- Atributos del pedido ---
     @Column(name = "fec_pedido", nullable = false)
     private LocalDate fechaPedido;
 
@@ -32,6 +32,7 @@ public class Pedido implements Serializable {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
 
+    // IMPORTANTE: aquí SÍ queremos que borrar el pedido borre sus líneas
     @OneToMany(
             mappedBy = "pedido",
             cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },
@@ -39,26 +40,24 @@ public class Pedido implements Serializable {
     )
     private Set<DetallePedido> detalles = new LinkedHashSet<>();
 
+    // ---- Métodos de dominio ----
     public DetallePedido addLinea(Producto producto, int cantidad, BigDecimal precio) {
         DetallePedido d = new DetallePedido();
         d.setCantidad(cantidad);
         d.setPrecio(precio);
-        d.attach(this, producto);     // sincroniza PK compuesta
-        this.detalles.add(d);         // ÚNICO punto donde se añade
+        d.attach(this, producto);          // sincroniza PK compuesta
+        this.detalles.add(d);              // único punto de inserción (evita duplicados)
         return d;
     }
-
 
     public void removeLinea(DetallePedido detalle) {
         if (detalle != null) {
             this.detalles.remove(detalle);
-            detalle.attach(null, null); // rompe vínculos (deja PK a null)
+            detalle.attach(null, null);
         }
     }
 
-    // ----------------------
-    // Getters / Setters
-    // ----------------------
+    // ---- Getters / Setters ----
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

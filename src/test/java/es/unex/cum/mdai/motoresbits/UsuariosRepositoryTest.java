@@ -12,6 +12,11 @@ import es.unex.cum.mdai.motoresbits.data.repository.UsuarioRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
+/**
+ * Tests centrados en restricciones y comportamiento del repositorio de usuarios.
+ * En este archivo se valida la restricción de unicidad del email y se documenta
+ * explícitamente la intención: evitar que existan dos usuarios con el mismo email.
+ */
 class UsuariosRepositoryTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;

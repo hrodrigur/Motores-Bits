@@ -17,6 +17,12 @@ import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 import jakarta.validation.ConstraintViolationException;
 
+/**
+ * Pruebas para validar el comportamiento del repositorio de `Resena`:
+ * - creación y búsqueda por producto
+ * - validación de rango de puntuación (1..5)
+ * - agregación (media) de puntuaciones
+ */
 class ResenasRepositoryTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;

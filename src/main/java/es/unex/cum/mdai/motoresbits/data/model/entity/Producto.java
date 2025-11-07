@@ -1,103 +1,68 @@
 package es.unex.cum.mdai.motoresbits.data.model.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.*;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "PRODUCTOS")
-public class Producto {
+@Table(name = "PRODUCTOS", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_producto_referencia", columnNames = "referencia")
+})
+public class Producto implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_producto")
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_categoria")
+    // Relación con categoría
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_categoria", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_producto_categoria"))
     private Categoria categoria;
 
+    @Column(nullable = false)
     private String nombre;
+
     @Column(nullable = false, unique = true)
     private String referencia;
 
-    @Column(precision = 10, scale = 2)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @jakarta.validation.constraints.Min(0)
+    @Min(0)
     @Column(nullable = false)
-    private Integer stock;
+    private Integer stock = 0;
 
-    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DetallePedido> detalles = new ArrayList<>();
+    // IMPORTANTE: SIN REMOVE ni orphanRemoval para que NO se borren detalles al borrar el producto
+    @OneToMany(
+            mappedBy = "producto",
+            cascade = { CascadeType.PERSIST, CascadeType.MERGE },
+            orphanRemoval = false
+    )
+    private Set<DetallePedido> detalles = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Resena> resenas = new ArrayList<>();
+    // Getters / Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public Categoria getCategoria() { return categoria; }
+    public void setCategoria(Categoria categoria) { this.categoria = categoria; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
 
-    public Categoria getCategoria() {
-        return categoria;
-    }
+    public String getReferencia() { return referencia; }
+    public void setReferencia(String referencia) { this.referencia = referencia; }
 
-    public void setCategoria(Categoria categoria) {
-        this.categoria = categoria;
-    }
+    public BigDecimal getPrecio() { return precio; }
+    public void setPrecio(BigDecimal precio) { this.precio = precio; }
 
-    public String getNombre() {
-        return nombre;
-    }
+    public Integer getStock() { return stock; }
+    public void setStock(Integer stock) { this.stock = stock; }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public String getReferencia() {
-        return referencia;
-    }
-
-    public void setReferencia(String referencia) {
-        this.referencia = referencia;
-    }
-
-    public BigDecimal getPrecio() {
-        return precio;
-    }
-
-    public void setPrecio(BigDecimal precio) {
-        this.precio = precio;
-    }
-
-    public Integer getStock() {
-        return stock;
-    }
-
-    public void setStock(Integer stock) {
-        this.stock = stock;
-    }
-
-    public List<DetallePedido> getDetalles() {
-        return detalles;
-    }
-
-    public void setDetalles(List<DetallePedido> detalles) {
-        this.detalles = detalles;
-    }
-
-    public List<Resena> getResenas() {
-        return resenas;
-    }
-
-    public void setResenas(List<Resena> resenas) {
-        this.resenas = resenas;
-    }
+    public Set<DetallePedido> getDetalles() { return detalles; }
+    public void setDetalles(Set<DetallePedido> detalles) { this.detalles = detalles; }
 }

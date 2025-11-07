@@ -2,17 +2,17 @@
 
 # LOGO
 
-<img src="Motores&Bits_G.png" style="width:300px;"/>
+<img src="Motores&Bits_G.png" alt="Logo Motores&Bits" style="width:300px;"/>
 
 # Integrantes
 
 -   Javier Prada Naharros 07272502V
 
-<img src="Javier.jpg" style="width:200px;"/>
+<img src="Javier.jpg" alt="Foto de Javier" style="width:200px;"/>
 
 -   Hugo Rodríguez Galván 45971797H
-  
-<img src="Hugo.jpg" style="width:200px;"/>
+
+<img src="Hugo.jpg" alt="Foto de Hugo" style="width:200px;"/>
 
 # Eslogan
 
@@ -74,7 +74,7 @@ El sistema cuenta con dos roles principales:
 
 # DiagramaE/R
 
-<img src="diagramaER.png">
+<img src="diagramaER.png" alt="Diagrama entidad-relación">
 
 ## Explicacion diagramaE/R
 
@@ -134,7 +134,7 @@ Aqui se va a explicar como crear un docker con la imagen de MariaDB
 - `Resena.puntuacion` ∈ [1..5].
 - Estados de pedido con transiciones válidas.
 
-## Flujo de Checkout 
+## Flujo de Checkout
 1. Cliente confirma carro → **calcular total**.
 2. Crear `PEDIDO` (estado = `PENDIENTE`).
 3. Por cada ítem: crear `DETALLE_PEDIDO` con **precio snapshot** y **cantidad**, y **descontar stock**.
@@ -148,10 +148,199 @@ Aqui se va a explicar como crear un docker con la imagen de MariaDB
 
 ## Explicacion Test
 
-- AdminUseCasesTest: valida los casos de uso del administrador, CRUD de categorías y productos, consulta de pedido con sus líneas/productos.
-- GeneralSmokeTests: alta de usuarios con unicidad de email, catálogo (listado por categoría y bloqueo de referencias duplicadas), reseñas (rango válido y media) y checkout.
-- PedidosRepositoryTest: crea un pedido con líneas y verifica consultas por usuario y producto.
-- ProductosCategoriasRepositoryTest: lista productos por categoría y verifica que la referencia del producto es única.
-- ResenasRepositoryTest: crea y lista reseñas por producto, valida el rango 1–5 (guardar 6, lanza ConstraintViolationException) y calcula la media de puntuaciones por producto.
-- UsuariosRepositoryTest: verifica la unicidad del email. Crea un usuario y al intentar guardar otro con el mismo email espera DataIntegrityViolationException usando TestDataFactory para el dato inicial.
-- UsuarioUseCasesTest: registro (éxito y email duplicado) y login (correcto, email inexistente y contraseña incorrecta simulada).
+Explicacion de los test que aparecen en el paquete `src/test/java/es/unex/cum/mdai/motoresbits`.
+Por cada test se indica: intención, pasos de setup y las aserciones principales.
+
+
+### `AdminUseCasesTest`
+
+- `categoria_crud_basico`
+  - Intención: validar las operaciones CRUD básicas sobre `Categoria`.
+  - Setup: crear una `Categoria`, guardarla, actualizar su nombre y eliminarla.
+  - Aserciones: la lista inicial contiene la categoría creada; tras la actualización el nombre persiste; tras el borrado la búsqueda por id devuelve empty.
+
+- `producto_crud_y_listado_por_categoria`
+  - Intención: CRUD sobre `Producto` y listado por categoría.
+  - Setup: crear categoría (factory), crear producto manualmente, modificar precio y stock, persistir y recuperar por id y por categoría.
+  - Aserciones: precio actualizado, stock actualizado, que el listado por categoría contiene la referencia esperada; tras borrar, la entidad deja de existir.
+
+- `pedido_maestro_detalle_con_lineas_y_productos`
+  - Intención: comprobar que un `Pedido` puede tener detalles (líneas) y que el repositorio puede recuperar el pedido con sus líneas y productos (JOIN FETCH).
+  - Setup: crear usuario y productos, crear pedido, añadir líneas y persistir.
+  - Aserciones: al recuperar con `findConLineasYProductos` el pedido tiene tantos detalles como se añadieron y cada detalle tiene producto y precio no nulos.
+
+- `pedido_actualizar_estado`
+  - Intención: verificar transiciones de estado de `Pedido` y que se persisten.
+  - Setup: crear pedido inicial con estado PENDIENTE; actualizar sucesivamente a PAGADO, ENVIADO y ENTREGADO.
+  - Aserciones: tras cada saveAndFlush, la entidad recuperada refleja el nuevo estado.
+
+- `moderar_resenas_editar_y_eliminar`
+  - Intención: demostrar la moderación de reseñas: edición y eliminación.
+  - Setup: crear usuario, categoría y producto, crear reseña, actualizar sus campos y eliminarla.
+  - Aserciones: tras la edición, la reseña recuperada muestra los nuevos valores; tras el delete la búsqueda por id es empty.
+
+
+### `GeneralSmokeTests`
+
+- `usuario_registroLogin_y_unicidadEmail`
+  - Intención: flujo básico de registro + comprobación de unicidad del email.
+  - Setup: crear usuario, persistir, cargar por email; intentar crear otro con mismo email para forzar DataIntegrityViolationException.
+  - Aserciones: id asignado tras persistir, contraseña almacenada correctamente (en este proyecto sin encoder) y la excepción al duplicar email.
+
+- `productos_porCategoria_y_unicidadReferencia`
+  - Intención: listado de productos por categoría y validación de unicidad de `referencia`.
+  - Setup: crear categoría, dos productos (uno manual, otro por factory), verificar listado; luego intentar crear producto con referencia duplicada y esperar DataIntegrityViolationException.
+  - Aserciones: el listado contiene las referencias esperadas; la inserción duplicada lanza la excepción.
+
+- `resenas_crear_listar_validarYMedia`
+  - Intención: cubrir creación de reseñas, validación del rango de puntuación y cálculo de la media.
+  - Setup: crear usuarios, categoría y producto; crear reseña válida, intentar reseña inválida (puntuación fuera de 1..5) y comprobar que lanza ConstraintViolationException; crear otra reseña válida y comprobar lista y media.
+  - Aserciones: la excepción se lanza para puntuaciones inválidas; la lista de reseñas del producto tiene el tamaño esperado; la media es la esperada (se comprueba con offset numérico).
+
+- `pedidos_checkout_joinFetch_y_orphanRemoval`
+  - Intención: flujo de checkout que crea pedido y líneas, comprobación join-fetch y orphanRemoval tras eliminar una línea.
+  - Setup: crear usuario, categoría, productos; crear pedido, añadir líneas, persistir; comprobar detalle por pedido/producto; recuperar pedido con líneas; remover una línea y verificar que ya no existe el detalle.
+  - Aserciones: detalle presente antes de remover; después de remover, consulta por ese detalle devuelve empty.
+
+
+### `PedidosRepositoryTest`
+
+- `crearPedidoConLinea_y_consultarPorUsuarioYProducto`
+  - Intención: crear pedido con línea y verificar consultas por usuario y por producto.
+  - Setup: usar factory para crear usuario/categoría/producto, crear pedido con línea, persistir.
+  - Aserciones: pedido recuperable por usuario, detalle encontrado por pedidoId y productoId con cantidad y precio esperados.
+
+- `joinFetch_pedidoConLineasYProductos`
+  - Intención: comprobar método que recupera pedido con líneas y productos mediante JOIN FETCH.
+  - Setup: crear pedido y añadir varias líneas con productos, persistir.
+  - Aserciones: al cargar con el método, detalles de tamaño esperado y que cada detalle contiene producto y precio no nulos.
+
+- `orphanRemoval_quitarLineaBorraEnBD`
+  - Intención: verificar orphanRemoval en la colección de líneas del pedido.
+  - Setup: crear pedido y una línea, persistir, contar líneas, remover línea, persistir.
+  - Aserciones: antes count == 1; después count == 0.
+
+- `transaccion_rollback_alFallar_dentroDeTransaccionNueva`
+  - Intención: asegurar que una transacción nueva que falla realiza rollback sin afectar la transacción externa.
+  - Setup: crear recurso y ejecutar código dentro de TransactionTemplate con PROPAGATION_REQUIRES_NEW que lanza RuntimeException.
+  - Aserciones: tras el fallo, las operaciones realizadas en la transacción nueva no deben persistir (consulta por usuario devuelve vacío).
+
+
+### `ProductosCategoriasRepositoryTest`
+
+- `categoria_crear_y_listarProductosPorCategoria`
+  - Intención: crear categoría y listar productos por categoría.
+  - Setup: factory crea categoría y dos productos; persistir.
+  - Aserciones: la consulta por categoría devuelve ambos productos; comprobación por referencias con containsExactlyInAnyOrder.
+
+- `producto_unicidadReferencia_debeLanzarExcepcion`
+  - Intención: asegurar que la BD impone unicidad sobre `referencia`.
+  - Setup: crear producto con referencia, intentar guardar otro con misma referencia.
+  - Aserciones: saveAndFlush del segundo producto lanza DataIntegrityViolationException.
+
+
+### `ResenasRepositoryTest`
+
+- `crearResena_y_buscarPorProducto`
+  - Intención: verificar la creación de una reseña y su recuperación por producto.
+  - Setup: factory crea usuario, categoría y producto; se crea reseña con puntuación válida y comentario; se intenta setear fecha si la entidad lo permite.
+  - Aserciones: findByProductoId devuelve lista con tamaño 1 y que el usuario asociado coincide por email.
+
+- `validacion_puntuacion_1a5_debeFallarSiSeExcede`
+  - Intención: comprobar que puntuaciones fuera de rango alto lanzan ConstraintViolationException.
+  - Setup: crear reseña con puntuación 6 y persistir.
+  - Aserciones: saveAndFlush lanza ConstraintViolationException.
+
+- `validacion_puntuacion_minima_debeFallarSiEsInferior`
+  - Intención: comprobar que puntuaciones por debajo de 1 fallan.
+  - Setup: crear reseña con puntuación 0 y persistir.
+  - Aserciones: saveAndFlush lanza ConstraintViolationException.
+
+- `mediaDePuntuaciones_porProducto`
+  - Intención: comprobar cálculo de la media de puntuaciones por producto.
+  - Setup: crear tres usuarios y tres reseñas con puntuaciones 5,4,3; persistir y flush.
+  - Aserciones: llamada a avgPuntuacionByProductoId devuelve 4.0 con un offset numérico tolerante.
+
+
+### `UsuariosRepositoryTest`
+
+- `unicidadEmail_debeLanzarExcepcion`
+  - Intención: asegurar la unicidad de `email` en la tabla de usuarios.
+  - Setup: usar factory para crear usuario persistido; crear nuevo usuario con el mismo email.
+  - Aserciones: saveAndFlush del segundo usuario lanza DataIntegrityViolationException.
+
+
+### `UsuarioUseCasesTest`
+
+- `registro_creaUsuarioCliente_y_sePuedeLeerPorEmail`
+  - Intención: comprobar que el registro crea un usuario cliente que luego puede recuperarse por email.
+  - Setup: construir Usuario con rol CLIENTE y persistir.
+  - Aserciones: id no nulo, al recargar por email el nombre y rol coinciden.
+
+- `registro_falla_siEmailDuplicado`
+  - Intención: registrar otro usuario con email existente debe fallar.
+  - Setup: factory crea usuario persistido; construir usuario con mismo email e intentar guardar.
+  - Aserciones: saveAndFlush lanza DataIntegrityViolationException.
+
+- `login_correcto_conEmailYContrasenaValidos`
+  - Intención: validar login simulado comparando contraseñas en texto (proyecto no usa encoder en tests).
+  - Setup: factory crea usuario; recuperar por email.
+  - Aserciones: la contraseña recuperada es igual a la almacenada por la factory.
+
+- `login_falla_siEmailNoExiste`
+  - Intención: buscar por email inexistente debe devolver Optional vacío.
+  - Setup: no crear usuario con ese email.
+  - Aserciones: findByEmail devuelve empty.
+
+- `login_falla_siContrasenaIncorrecta`
+  - Intención: comprobar que una contraseña distinta a la almacenada no coincide.
+  - Setup: factory crea usuario con contraseña "x"; recuperar y comparar con otra cadena.
+  - Aserciones: la contraseña almacenada no es igual a la cadena incorrecta.
+
+
+### `DeleteBehaviorTests`
+
+- `borrarCategoria_sinProductos_OK`
+  - Intención: borrar categoría vacía debe eliminarse sin problemas.
+  - Setup: factory crea categoría.
+  - Aserciones: tras delete+flush, findById devuelve empty.
+
+- `borrarCategoria_conProductos_FALLA`
+  - Intención: intentar borrar categoría con productos relacionados debe provocar una excepción por integridad referencial.
+  - Setup: crear categoría y un producto asociado.
+  - Aserciones: delete+flush lanza DataIntegrityViolationException.
+
+- `borrarProducto_sinDependencias_OK`
+  - Intención: borrar producto sin dependencias debe eliminarlo.
+  - Setup: crear categoría y producto; eliminar producto.
+  - Aserciones: findById devuelve empty.
+
+- `borrarProducto_conResenas_FALLA`
+  - Intención: borrar producto con reseñas debe fallar por integridad.
+  - Setup: crear producto y reseña asociada.
+  - Aserciones: delete+flush lanza DataIntegrityViolationException.
+
+- `borrarProducto_conDetallePedido_FALLA` y `diagnostico_borrarProducto_conDetallePedido`
+  - Intención: comprobar comportamiento al borrar producto que aparece en líneas de pedido; en función de la BD se espera excepción o que el producto (o detalle) siga presente.
+  - Setup: crear pedido con línea referenciando el producto.
+  - Aserciones: si la operación no lanza excepción, se evalúa que al menos exista el producto o el detalle (se asegura que no ambos desaparezcan inesperadamente); si lanza DataIntegrityViolation, se captura y se limpia el contexto.
+
+- `borrarUsuario_sinDependencias_OK`
+  - Intención: borrar usuario sin dependencias exitosamente.
+  - Setup: crear usuario y eliminarlo.
+  - Aserciones: findById devuelve empty.
+
+- `borrarUsuario_conPedidos_FALLA`
+  - Intención: borrar usuario con pedidos debe fallar por integridad referencial.
+  - Setup: crear usuario, pedido y detalle; intentar borrar usuario.
+  - Aserciones: delete+flush lanza DataIntegrityViolationException.
+
+- `borrarUsuario_conResenas_FALLA`
+  - Intención: borrar usuario con reseñas debe fallar por integridad referencial.
+  - Setup: crear usuario y reseña asociada.
+  - Aserciones: delete+flush lanza DataIntegrityViolationException.
+
+- `borrarPedido_borraSusLineas_porCascadeYOrphanRemoval_OK`
+  - Intención: borrar pedido debe eliminar sus líneas asociadas cuando cascade+orphanRemoval están configurados.
+  - Setup: crear pedido con dos líneas, persistir y confirmar contador de detalles == 2; borrar pedido.
+  - Aserciones: tras delete+flush, pedido no existe y detalleRepo.count() == 0.

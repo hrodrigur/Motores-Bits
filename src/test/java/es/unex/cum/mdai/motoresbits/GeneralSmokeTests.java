@@ -33,8 +33,9 @@ import org.assertj.core.data.Offset;
 
 /**
  * Pruebas de humo generales que cubren los flujos más importantes: registro/login,
- * operaciones CRUD y validaciones. Están diseñadas para detectar regresiones
- * en las capas de persistencia y en las restricciones (unicidad, validaciones).
+ * operaciones CRUD y validaciones.
+ *
+ * Estos tests ayudan a detectar regresiones en persistencia y restricciones.
  */
 class GeneralSmokeTests extends BaseJpaTest {
 
@@ -50,7 +51,8 @@ class GeneralSmokeTests extends BaseJpaTest {
     @PersistenceContext
     private EntityManager em;
 
-    // 1) Registro + login básico + unicidad email
+    // --------------------------- Usuarios --------------------------------
+
     @Test
     void usuario_registroLogin_y_unicidadEmail() {
         String email = "smoke@test.com";
@@ -68,14 +70,15 @@ class GeneralSmokeTests extends BaseJpaTest {
 
         var duplicado = new Usuario();
         duplicado.setNombre("Dup");
-        duplicado.setEmail(email); // mismísimo email
+        duplicado.setEmail(email);
         duplicado.setContrasena("x");
         duplicado.setRol(RolUsuario.CLIENTE);
         assertThatThrownBy(() -> usuarioRepo.saveAndFlush(duplicado))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    // 2) Categorías/Productos: crear, listar por categoría, unicidad referencia
+    // ------------------------- Categorías / Productos ---------------------
+
     @Test
     void productos_porCategoria_y_unicidadReferencia() {
         var cat = new Categoria();
@@ -99,7 +102,7 @@ class GeneralSmokeTests extends BaseJpaTest {
 
         var dup = new Producto();
         dup.setNombre("RefDup");
-        dup.setReferencia(p1.getReferencia()); // duplicada
+        dup.setReferencia(p1.getReferencia());
         dup.setPrecio(new BigDecimal("1.00"));
         dup.setStock(1);
         dup.setCategoria(cat);
@@ -107,7 +110,8 @@ class GeneralSmokeTests extends BaseJpaTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    // 3) Reseñas: crear/listar, validación rango, media por producto
+    // ---------------------------- Reseñas --------------------------------
+
     @Test
     void resenas_crear_listar_validarYMedia() {
         var u1 = f.newUsuarioPersisted();
@@ -115,7 +119,6 @@ class GeneralSmokeTests extends BaseJpaTest {
         var c = f.newCategoriaPersisted("Frenos");
         var prod = f.newProductoPersisted(c, "PF", new BigDecimal("19.95"));
 
-        // válida
         var r1 = new Resena();
         r1.setUsuario(u1);
         r1.setProducto(prod);
@@ -124,7 +127,6 @@ class GeneralSmokeTests extends BaseJpaTest {
         try { r1.setCreadaEn(LocalDateTime.now()); } catch (Throwable ignored) {}
         resenaRepo.saveAndFlush(r1);
 
-        // inválida (6) -> esperamos ConstraintViolationException
         var rInv = new Resena();
         rInv.setUsuario(u2);
         rInv.setProducto(prod);
@@ -134,10 +136,8 @@ class GeneralSmokeTests extends BaseJpaTest {
         assertThatThrownBy(() -> resenaRepo.saveAndFlush(rInv))
                 .isInstanceOf(ConstraintViolationException.class);
 
-        // 🔧 Importante: limpiar el contexto tras una excepción de validación
         em.clear();
 
-        // otra válida para calcular media
         var r2 = new Resena();
         r2.setUsuario(u2);
         r2.setProducto(prod);
@@ -152,7 +152,8 @@ class GeneralSmokeTests extends BaseJpaTest {
         assertThat(media).isCloseTo(4.0, Offset.offset(1e-4));
     }
 
-    // 4) Checkout mínimo: pedido + detalle por cascada + join fetch + orphanRemoval
+    // ---------------------------- Pedidos --------------------------------
+
     @Test
     void pedidos_checkout_joinFetch_y_orphanRemoval() {
         var u = f.newUsuarioPersisted();
@@ -160,7 +161,6 @@ class GeneralSmokeTests extends BaseJpaTest {
         var pr1 = f.newProductoPersisted(c, "FA", new BigDecimal("12.50"));
         var pr2 = f.newProductoPersisted(c, "FB", new BigDecimal("9.90"));
 
-        // crear pedido
         var pedido = new Pedido();
         pedido.setUsuario(u);
         pedido.setFechaPedido(LocalDate.now());
@@ -168,17 +168,14 @@ class GeneralSmokeTests extends BaseJpaTest {
         pedido.setTotal(new BigDecimal("22.40"));
         pedido = pedidoRepo.save(pedido);
 
-        // añadir líneas (PK compuesta por MapsId) y persistir por cascada
-        var l1 = pedido.addLinea(pr1, 1, pr1.getPrecio());
+        pedido.addLinea(pr1, 1, pr1.getPrecio());
         var l2 = pedido.addLinea(pr2, 1, pr2.getPrecio());
         pedidoRepo.saveAndFlush(pedido);
 
-        // buscar detalle con método derivado
         var d1 = detalleRepo.findByPedido_IdAndProducto_Id(pedido.getId(), pr1.getId());
         assertThat(d1).isPresent();
         assertThat(d1.get().getCantidad()).isEqualTo(1);
 
-        // join fetch (pedido con líneas y productos en una query)
         var cargado = pedidoRepo.findConLineasYProductos(pedido.getId()).orElseThrow();
         assertThat(cargado.getDetalles()).hasSize(2);
         assertThat(cargado.getDetalles()).allSatisfy(d -> {
@@ -186,7 +183,6 @@ class GeneralSmokeTests extends BaseJpaTest {
             assertThat(d.getPrecio()).isNotNull();
         });
 
-        // orphanRemoval: quitar una línea y confirmar borrado en BD
         pedido.removeLinea(l2);
         pedidoRepo.saveAndFlush(pedido);
         assertThat(detalleRepo.findByPedido_IdAndProducto_Id(pedido.getId(), pr2.getId()))

@@ -14,8 +14,7 @@ import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
 /**
  * Tests centrados en restricciones y comportamiento del repositorio de usuarios.
- * En este archivo se valida la restricción de unicidad del email y se documenta
- * explícitamente la intención: evitar que existan dos usuarios con el mismo email.
+ * En particular, se valida la unicidad del email.
  */
 class UsuariosRepositoryTest extends BaseJpaTest {
 

@@ -6,7 +6,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Test mínimo que arranca el contexto de Spring Boot con el perfil de pruebas.
- * Útil para detectar errores de wiring, configuración o beans faltantes al inicio.
+ * Mantener este test ayuda a detectar problemas de wiring o configuración.
  */
 @SpringBootTest
 @ActiveProfiles("test")

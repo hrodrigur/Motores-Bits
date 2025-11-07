@@ -18,10 +18,11 @@ import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 import jakarta.validation.ConstraintViolationException;
 
 /**
- * Pruebas para validar el comportamiento del repositorio de `Resena`:
+ * Pruebas para el repositorio de reseñas (`Resena`).
+ * Validaciones cubiertas:
  * - creación y búsqueda por producto
- * - validación de rango de puntuación (1..5)
- * - agregación (media) de puntuaciones
+ * - rango de puntuación (1..5) mediante ConstraintViolation
+ * - cálculo de la media de puntuaciones
  */
 class ResenasRepositoryTest extends BaseJpaTest {
 
@@ -44,7 +45,8 @@ class ResenasRepositoryTest extends BaseJpaTest {
 
         var resenas = resenaRepo.findByProductoId(p.getId());
         assertThat(resenas).hasSize(1);
-        assertThat(resenas.get(0).getUsuario().getEmail()).isEqualTo(u.getEmail());
+        // Comprobamos que la lista contiene una reseña cuyo email de usuario coincide
+        assertThat(resenas).extracting(res -> res.getUsuario().getEmail()).contains(u.getEmail());
     }
 
     @Test
@@ -61,6 +63,22 @@ class ResenasRepositoryTest extends BaseJpaTest {
 
         assertThatThrownBy(() -> resenaRepo.saveAndFlush(rInv))
                 .isInstanceOf(ConstraintViolationException.class);
+    }
+
+    @Test
+    void validacion_puntuacion_minima_debeFallarSiEsInferior() {
+        var u = f.newUsuarioPersisted();
+        var c = f.newCategoriaPersisted("Frenos");
+        var p = f.newProductoPersisted(c, "PF", new BigDecimal("19.95"));
+
+        var rInv = new Resena();
+        rInv.setUsuario(u);
+        rInv.setProducto(p);
+        rInv.setPuntuacion(0); // inválida: por debajo del rango 1..5
+        rInv.setComentario("muy bajo");
+
+        assertThatThrownBy(() -> resenaRepo.saveAndFlush(rInv))
+                .isInstanceOf(jakarta.validation.ConstraintViolationException.class);
     }
 
     @Test

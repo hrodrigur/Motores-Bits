@@ -7,6 +7,8 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import es.unex.cum.mdai.motoresbits.data.model.entity.Pedido;
 import es.unex.cum.mdai.motoresbits.data.model.enums.EstadoPedido;
@@ -17,13 +19,15 @@ import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
 /**
  * Pruebas centradas en el repositorio de `Pedido` y en el manejo de líneas (DetallePedido).
- * Comprueban consultas por usuario, operaciones JOIN FETCH y comportamiento de orphanRemoval.
+ *
+ * Verifica consultas por usuario, operaciones JOIN FETCH y el comportamiento de orphanRemoval.
  */
 class PedidosRepositoryTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
     @Autowired PedidoRepository pedidoRepo;
     @Autowired DetallePedidoRepository detalleRepo;
+    @Autowired PlatformTransactionManager txManager;
 
     // Crear un pedido con una línea y verificar consultas por usuario y por producto.
     @Test
@@ -88,4 +92,38 @@ class PedidosRepositoryTest extends BaseJpaTest {
         pedidoRepo.saveAndFlush(pedido);
         assertThat(detalleRepo.count()).isZero();
     }
+
+    @Test
+    void transaccion_rollback_alFallar_dentroDeTransaccionNueva() {
+        var u = f.newUsuarioPersisted();
+        var c = f.newCategoriaPersisted("TestTX");
+        var prod = f.newProductoPersisted(c, "TXP", new BigDecimal("5.00"));
+
+        // Usamos TransactionTemplate para crear una transacción independiente que falla
+        var tt = new TransactionTemplate(txManager);
+        tt.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
+        try {
+            tt.executeWithoutResult(status -> {
+                var pedido = new Pedido();
+                pedido.setUsuario(u);
+                pedido.setFechaPedido(LocalDate.now());
+                pedido.setEstado(EstadoPedido.PENDIENTE);
+                pedido.setTotal(new BigDecimal("5.00"));
+                pedido = pedidoRepo.saveAndFlush(pedido);
+                pedido.addLinea(prod, 1, prod.getPrecio());
+                pedidoRepo.saveAndFlush(pedido);
+
+                // Forzamos fallo para que la transacción nueva haga rollback
+                throw new RuntimeException("Forzar rollback de la transacción nueva");
+            });
+        } catch (RuntimeException ex) {
+            // excepción esperada
+        }
+
+        // Tras la excepción, la operación en la transacción nueva debe haber sido rollbacked
+        var all = pedidoRepo.findByUsuarioId(u.getId());
+        assertThat(all).isEmpty();
+    }
+
 }

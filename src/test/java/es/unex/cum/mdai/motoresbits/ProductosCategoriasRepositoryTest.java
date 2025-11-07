@@ -9,21 +9,23 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import es.unex.cum.mdai.motoresbits.data.model.entity.Categoria;
 import es.unex.cum.mdai.motoresbits.data.model.entity.Producto;
-import es.unex.cum.mdai.motoresbits.data.repository.CategoriaRepository;
 import es.unex.cum.mdai.motoresbits.data.repository.ProductoRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
 /**
  * Tests para repositorios `Producto` y `Categoria`.
- * Validaciones: listado por categoría y restricción de unicidad en la referencia.
+ *
+ * Objetivo:
+ * - Verificar la creación de categorías y el listado de productos por categoría.
+ * - Validar la restricción de unicidad en la referencia de producto.
+ *
+ * Cada test es autocontenido y persistente en la BBDD de pruebas (profil `test`).
  */
 class ProductosCategoriasRepositoryTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
-    @Autowired CategoriaRepository categoriaRepo;
     @Autowired ProductoRepository productoRepo;
 
     @Test
@@ -45,7 +47,7 @@ class ProductosCategoriasRepositoryTest extends BaseJpaTest {
 
         var p2 = new Producto();
         p2.setNombre("Otro");
-        p2.setReferencia(p1.getReferencia()); // duplicada
+        p2.setReferencia(p1.getReferencia()); // duplicada intencionadamente
         p2.setPrecio(new BigDecimal("9.99"));
         p2.setStock(10);
         p2.setCategoria(cat);

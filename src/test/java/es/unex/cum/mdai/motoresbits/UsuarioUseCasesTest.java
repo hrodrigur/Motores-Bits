@@ -14,22 +14,22 @@ import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
 /**
- * Casos de uso relacionados con usuarios: registro, unicidad de email y login
- * (simulado sin encoder). Los tests validan el contrato del repositorio de usuarios.
+ * Casos de uso relacionados con usuarios: registro y login (simulado sin encoder).
+ * Los tests validan tanto el flujo exitoso como fallos esperados (unicidad, credenciales).
  */
 class UsuarioUseCasesTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
     @Autowired UsuarioRepository usuarioRepo;
 
-    // CU-01 Registro: éxito
+    // Registro: éxito
     @Test
     void registro_creaUsuarioCliente_y_sePuedeLeerPorEmail() {
         String email = "nuevo@test.com";
         var u = new Usuario();
         u.setNombre("Nuevo");
         u.setEmail(email);
-        u.setContrasena("secreto");               // si usas encoder, aquí iría ya codificada
+        u.setContrasena("secreto");
         u.setRol(RolUsuario.CLIENTE);
 
         var saved = usuarioRepo.saveAndFlush(u);
@@ -40,14 +40,14 @@ class UsuarioUseCasesTest extends BaseJpaTest {
         assertThat(reloaded.getRol()).isEqualTo(RolUsuario.CLIENTE);
     }
 
-    // CU-01 Registro: email duplicado
+    // Registro: fallo por email duplicado
     @Test
     void registro_falla_siEmailDuplicado() {
         var existente = f.newUsuarioPersisted();
 
         var u2 = new Usuario();
         u2.setNombre("Repetido");
-        u2.setEmail(existente.getEmail());        // duplicado
+        u2.setEmail(existente.getEmail());
         u2.setContrasena("x");
         u2.setRol(RolUsuario.CLIENTE);
 
@@ -55,13 +55,12 @@ class UsuarioUseCasesTest extends BaseJpaTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    // CU-02 Login: éxito (email existe y contraseña coincide)
+    // Login: éxito (simulado)
     @Test
     void login_correcto_conEmailYContrasenaValidos() {
-        var u = f.newUsuarioPersisted();          // la factory pone contrasena "x"
+        var u = f.newUsuarioPersisted();
         var encontrado = usuarioRepo.findByEmail(u.getEmail()).orElseThrow();
 
-        // Si tienes encoder, compara encoder.matches(raw, hashed)
         assertThat(encontrado.getContrasena()).isEqualTo(u.getContrasena());
     }
 
@@ -78,7 +77,9 @@ class UsuarioUseCasesTest extends BaseJpaTest {
         var u = f.newUsuarioPersisted();          // contrasena "x"
         var encontrado = usuarioRepo.findByEmail(u.getEmail()).orElseThrow();
 
-        var passwordOk = "otra".equals(encontrado.getContrasena()); // simulado
-        assertThat(passwordOk).isFalse();
+        // Simulación: aquí comprobamos que una contraseña incorrecta concreta no coincide
+        // con la almacenada. Si en el proyecto se añade un PasswordEncoder, este test
+        // deberá adaptarse para usar encoder.matches(raw, hashed).
+        assertThat(encontrado.getContrasena()).isNotEqualTo("otra");
     }
 }

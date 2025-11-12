@@ -7,5 +7,6 @@ import es.unex.cum.mdai.motoresbits.data.model.entity.DetallePedidoId;
 
 public interface DetallePedidoRepository extends JpaRepository<DetallePedido, DetallePedidoId> {
 
+    boolean existsByProducto_Id(Long productoId);
     Optional<DetallePedido> findByPedido_IdAndProducto_Id(Long pedidoId, Long productoId);
 }

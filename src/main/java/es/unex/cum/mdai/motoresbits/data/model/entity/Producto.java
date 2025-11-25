@@ -36,6 +36,9 @@ public class Producto implements Serializable {
     @Column(nullable = false)
     private Integer stock = 0;
 
+    @Version
+    private Integer version;
+
     // IMPORTANTE: SIN REMOVE ni orphanRemoval para que NO se borren detalles al borrar el producto
     @OneToMany(
             mappedBy = "producto",
@@ -62,6 +65,9 @@ public class Producto implements Serializable {
 
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
+
+    public Integer getVersion() { return version; }
+    public void setVersion(Integer version) { this.version = version; }
 
     public Set<DetallePedido> getDetalles() { return detalles; }
     public void setDetalles(Set<DetallePedido> detalles) { this.detalles = detalles; }

@@ -71,7 +71,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    <!-- Añadimos -Xshare:off para evitar el warning de la JVM durante los tests -->
+                    <argLine>-Xshare:off -XX:+EnableDynamicAgentLoading</argLine>
                 </configuration>
             </plugin>
 

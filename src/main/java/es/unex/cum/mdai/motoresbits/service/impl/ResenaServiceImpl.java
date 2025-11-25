@@ -49,11 +49,7 @@ public class ResenaServiceImpl implements ResenaService {
         r.setPuntuacion(puntuacion);
         r.setComentario(comentario);
 
-        try {
-            return resenaRepository.save(r);
-        } catch (ConstraintViolationException ex) {
-            throw ex;
-        }
+        return resenaRepository.save(r);
     }
 
     @Override

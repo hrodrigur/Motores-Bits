@@ -420,7 +420,6 @@ class CatalogoServiceIT {
     /**
      * Test que verifica que eliminarProducto lanza ProductoConDependenciasException
      * cuando existe al menos una reseña asociada al producto.
-     *
      * Explicación: el servicio debe impedir borrar un producto si hay reseñas
      * para evitar inconsistencias (la entidad Resena apunta por FK a Producto).
      * El test crea un usuario (necesario para la reseña), una categoría y un producto,
@@ -456,7 +455,6 @@ class CatalogoServiceIT {
     /**
      * Test que verifica que eliminarProducto lanza ProductoConDependenciasException
      * cuando existe al menos una línea de pedido asociada al producto.
-     *
      * Explicación: si hay detalles de pedidos referenciando el producto, el
      * servicio debe impedir su eliminación y lanzar ProductoConDependenciasException.
      * Para crear la línea de pedido usamos directamente la entidad Pedido y

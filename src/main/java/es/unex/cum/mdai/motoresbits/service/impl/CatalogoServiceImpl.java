@@ -68,7 +68,7 @@ public class CatalogoServiceImpl implements CatalogoService {
     public void eliminarCategoria(Long id) {
         Categoria c = obtenerCategoria(id);
 
-        boolean tieneProductos = !productoRepository.findByCategoriaId(id).isEmpty();
+        boolean tieneProductos = productoRepository.existsByCategoriaId(id);
         if (tieneProductos) {
             throw new CategoriaConProductosException(id);
         }
@@ -136,7 +136,7 @@ public class CatalogoServiceImpl implements CatalogoService {
                 detallePedidoRepository.existsByProducto_Id(id);
 
         boolean tieneResenas =
-                !resenaRepository.findByProductoId(id).isEmpty();
+                resenaRepository.existsByProductoId(id);
 
         if (tieneDetallesPedido || tieneResenas) {
             throw new ProductoConDependenciasException(id);

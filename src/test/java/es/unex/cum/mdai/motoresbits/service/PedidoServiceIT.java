@@ -375,15 +375,20 @@ import static org.mockito.Mockito.when;
         Set<DetallePedido> detalles = conDetalles.getDetalles();
         assertNotNull(detalles);
         assertFalse(detalles.isEmpty());
-        int countDetallesAntes = (int) detallePedidoRepository.count();
+        // Comprobamos que cada detalle asociado al pedido existe en el repositorio
+        for (DetallePedido d : detalles) {
+            assertTrue(detallePedidoRepository.findByPedido_IdAndProducto_Id(idPedido, d.getProducto().getId()).isPresent());
+        }
 
         // when
         pedidoService.eliminarPedido(idPedido);
 
         // then
         assertFalse(pedidoRepository.findById(idPedido).isPresent());
-        int countDetallesDespues = (int) detallePedidoRepository.count();
-        assertTrue(countDetallesDespues <= countDetallesAntes - detalles.size());
+        // Verificamos que los detalles relacionados con este pedido ya no existen
+        for (DetallePedido d : detalles) {
+            assertFalse(detallePedidoRepository.findByPedido_IdAndProducto_Id(idPedido, d.getProducto().getId()).isPresent());
+        }
     }
 
     @Test
@@ -482,7 +487,6 @@ import static org.mockito.Mockito.when;
 
     @Test
     @DisplayName("concurrencia_confirmarPedidos_noSobrevender")
-    @SuppressWarnings("resource")
     @org.springframework.transaction.annotation.Transactional(propagation = Propagation.NOT_SUPPORTED)
     void concurrencia_confirmarPedidos_noSobrevender() throws InterruptedException {
         // producto con stock 1, dos pedidos que piden 1 cada uno
@@ -550,7 +554,7 @@ import static org.mockito.Mockito.when;
             boolean finished = done.await(5, TimeUnit.SECONDS);
 
             assertTrue(finished, "Las tareas deben terminar en tiempo");
-            assertEquals(1, success.get(), () -> "Solo un pedido debe confirmarse exitosamente");
+            assertEquals(1, success.get(), "Solo un pedido debe confirmarse exitosamente");
 
             Producto after = productoRepository.findById(prod.getId()).orElseThrow();
             assertEquals(0, after.getStock(), "El stock final debe ser 0");

@@ -15,4 +15,7 @@ public interface ResenaRepository extends JpaRepository<Resena, Long> {
 
     @Query("select avg(r.puntuacion) from Resena r where r.producto.id = :pid")
     Optional<Double> avgPuntuacionByProductoId(@Param("pid") Long productoId);
+
+    // Devuelve true si existe al menos una reseña para el producto
+    boolean existsByProductoId(Long productoId);
 }

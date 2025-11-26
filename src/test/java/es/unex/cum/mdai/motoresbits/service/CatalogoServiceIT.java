@@ -171,6 +171,17 @@ class CatalogoServiceIT {
                 () -> catalogoService.eliminarCategoria(9999L));
     }
 
+    @Test
+    @DisplayName("eliminarCategoria con productos asociados debe lanzar CategoriaConProductosException")
+    void eliminarCategoria_conProductos_lanzaExcepcion() {
+        Categoria cat = crearCategoria("ConProd");
+        // crear producto en la categoría
+        crearProductoEnCategoria(cat, "REF-CONP-1", new BigDecimal("10.00"), 2);
+
+        assertThrows(es.unex.cum.mdai.motoresbits.service.exception.CategoriaConProductosException.class,
+                () -> catalogoService.eliminarCategoria(cat.getId()));
+    }
+
     // Si en tu implementación eliminas categoría con productos lanzando una excepción,
     // puedes añadir algo como esto (ajustando la excepción concreta):
     //
@@ -505,6 +516,30 @@ class CatalogoServiceIT {
             // dependiendo de la implementación, la excepción puede lanzarse por el repositorio
             catalogoService.crearProducto(cat.getId(), "Otro nombre", "REF-DUP-1", new BigDecimal("12.00"), 3);
         });
+    }
+
+    @Test
+    @DisplayName("eliminarProducto con reseña asociada debe lanzar ProductoConDependenciasException")
+    void eliminarProducto_conResena_lanzaExcepcion() {
+        Categoria cat = crearCategoria("CatRes");
+        Producto p = crearProductoEnCategoria(cat, "REF-RES-1", new BigDecimal("5.00"), 10);
+
+        // crear usuario y reseña
+        Usuario u = new Usuario();
+        u.setNombre("UsuarioRes");
+        u.setEmail("res@example.com");
+        u.setContrasena("pw");
+        usuarioRepository.save(u);
+
+        Resena r = new Resena();
+        r.setUsuario(u);
+        r.setProducto(p);
+        r.setPuntuacion(4);
+        r.setComentario("buena");
+        resenaRepository.save(r);
+
+        assertThrows(es.unex.cum.mdai.motoresbits.service.exception.ProductoConDependenciasException.class,
+                () -> catalogoService.eliminarProducto(p.getId()));
     }
 
 }

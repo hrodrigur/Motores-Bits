@@ -157,11 +157,7 @@ public class PedidoServiceImpl implements PedidoService {
         if (nuevoEstado == EstadoPedido.CANCELADO && actual == EstadoPedido.PENDIENTE) {
             // devolver stock
             if (pedido.getDetalles() != null) {
-                pedido.getDetalles().forEach(d -> {
-                    Producto prod = productoRepository.findById(d.getProducto().getId()).orElseThrow();
-                    prod.setStock(prod.getStock() + d.getCantidad());
-                    productoRepository.save(prod);
-                });
+                pedido.getDetalles().forEach(d -> productoRepository.incrementarStock(d.getProducto().getId(), d.getCantidad()));
             }
         }
 
@@ -200,19 +196,22 @@ public class PedidoServiceImpl implements PedidoService {
                 }
 
                 try {
-                    // intentamos descontar stock
+                    // intentamos descontar stock de forma atómica en BD
                     for (DetallePedido d : pedido.getDetalles()) {
-                        Producto prod = productoRepository.findById(d.getProducto().getId()).orElseThrow();
-                        prod.setStock(prod.getStock() - d.getCantidad());
-                        productoRepository.save(prod);
+                        int updated = productoRepository.descontarStock(d.getProducto().getId(), d.getCantidad());
+                        if (updated == 0) {
+                            // no se pudo descontar (otro hilo se adelantó), re-evaluar stock
+                            throw new StockInsuficienteException(d.getProducto().getId(), d.getCantidad(),
+                                    productoRepository.findById(d.getProducto().getId()).map(Producto::getStock).orElse(0));
+                        }
                     }
-                    // si hemos llegado aquí sin OptimisticLockingFailureException, persistimos y salimos
+
+                    // si hemos llegado aquí, todas las líneas se descontaron correctamente
                     pedido.setEstado(EstadoPedido.PENDIENTE);
                     return pedidoRepository.save(pedido);
                 } catch (OptimisticLockingFailureException ex) {
-                    // conflicto de concurrencia: reintentar hasta MAX_RETRIES
+                    // mantenemos la lógica por compatibilidad con otros casos, intentar reintento
                     if (attempt >= MAX_RETRIES) {
-                        // re-evaluar stock para dar una excepción clara
                         for (DetallePedido d : pedido.getDetalles()) {
                             Producto prod = productoRepository.findById(d.getProducto().getId()).orElseThrow();
                             int disponible = prod.getStock();
@@ -220,12 +219,16 @@ public class PedidoServiceImpl implements PedidoService {
                                 throw new StockInsuficienteException(prod.getId(), d.getCantidad(), disponible);
                             }
                         }
-                        // si no faltaba stock, relanzamos la excepción original
                         throw ex;
                     }
-                    // backoff pequeño antes de reintentar
                     try { TimeUnit.MILLISECONDS.sleep(50L * attempt); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
-                    // reintentar
+                } catch (StockInsuficienteException sie) {
+                    // Si detectamos que otro hilo consumió el stock mientras intentábamos descontar,
+                    // reintentamos la operación completa (hasta MAX_RETRIES) para dar una oportunidad
+                    // a que otros pedidos fallen y este detecte la falta de stock.
+                    if (attempt >= MAX_RETRIES) throw sie;
+                    try { TimeUnit.MILLISECONDS.sleep(50L * attempt); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                    // limpiar y reintentar
                 }
             } else {
                 // no hay detalles; marcamos PENDIENTE igualmente
@@ -304,10 +307,8 @@ public class PedidoServiceImpl implements PedidoService {
                     throw new EstadoPedidoInvalidoException(actual, nuevo);
                 }
             }
-            case ENTREGADO, CANCELADO -> {
-                // no se permite cambiar desde ENTREGADO o CANCELADO
-                throw new EstadoPedidoInvalidoException(actual, nuevo);
-            }
+            case ENTREGADO, CANCELADO -> // no se permite cambiar desde ENTREGADO o CANCELADO
+                    throw new EstadoPedidoInvalidoException(actual, nuevo);
         }
     }
 }

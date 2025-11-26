@@ -20,15 +20,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 /**
- * Comprobaciones del comportamiento de borrado entre entidades relacionadas.
- *
- * Organización:
- * - Sección Categorías: borrar categoría vacía y caso con productos relacionados.
- * - Sección Productos: borrar producto sin dependencias y con dependencias
- *   (reseñas, líneas de pedido). Los tests son robustos frente a diferencias
- *   de dialecto/BD (aceptan excepción de integridad o verifican estado).
- * - Sección Usuarios: borrado con y sin dependencias.
- * - Sección Pedidos: verificación de cascada y orphanRemoval sobre líneas.
+ * Pruebas relacionadas con el comportamiento de borrado entre entidades.
+ * Estructura y convenciones en esta clase:
+ * - Las pruebas están agrupadas por entidad (Categorías, Productos, Usuarios, Pedidos).
+ * - Cada prueba incluye un comentario breve que describe: intención, pasos de setup y aserciones esperadas.
+ * - Las pruebas se centran en reglas de integridad referencial y en las excepciones/efectos esperados
+ *   al intentar eliminar entidades con dependencias.
  */
 class DeleteBehaviorTests extends BaseJpaTest {
 
@@ -44,6 +41,11 @@ class DeleteBehaviorTests extends BaseJpaTest {
 
     // ---------------------------- Categorías ----------------------------
 
+    /**
+     * Intención: borrar una categoría que no tiene productos asociados debe eliminarla sin errores.
+     * Setup: crear categoría mediante la factory y persistirla.
+     * Aserciones: tras delete+flush la búsqueda por id debe devolver empty.
+     */
     @Test
     void borrarCategoria_sinProductos_OK() {
         var cat = f.newCategoriaPersisted("Vacía");
@@ -52,6 +54,11 @@ class DeleteBehaviorTests extends BaseJpaTest {
         assertThat(categoriaRepo.findById(cat.getId())).isEmpty();
     }
 
+    /**
+     * Intención: intentar borrar una categoría que tiene productos relacionados debe fallar por integridad.
+     * Setup: crear categoría y producto asociado.
+     * Aserciones: delete+flush lanza DataIntegrityViolationException.
+     */
     @Test
     void borrarCategoria_conProductos_FALLA() {
         var cat = f.newCategoriaPersisted("Con productos");
@@ -67,6 +74,11 @@ class DeleteBehaviorTests extends BaseJpaTest {
 
     // ----------------------------- Productos -----------------------------
 
+    /**
+     * Intención: borrar un producto sin dependencias (ni reseñas ni detalles de pedido) debe tener éxito.
+     * Setup: crear categoría y producto; borrar el producto.
+     * Aserciones: el producto ya no debe encontrarse por id.
+     */
     @Test
     void borrarProducto_sinDependencias_OK() {
         var cat = f.newCategoriaPersisted("Libre");
@@ -77,6 +89,11 @@ class DeleteBehaviorTests extends BaseJpaTest {
         assertThat(productoRepo.findById(p.getId())).isEmpty();
     }
 
+    /**
+     * Intención: intentar borrar un producto con reseñas asociadas debe fallar por integridad.
+     * Setup: crear usuario, categoría, producto y reseña persistida.
+     * Aserciones: delete+flush lanza DataIntegrityViolationException.
+     */
     @Test
     void borrarProducto_conResenas_FALLA() {
         var u = f.newUsuarioPersisted();
@@ -98,6 +115,12 @@ class DeleteBehaviorTests extends BaseJpaTest {
         em.clear();
     }
 
+    /**
+     * Intención: intentar borrar un producto que aparece en una línea de pedido.
+     * Observación: según la BD/ dialecto puede lanzar excepción por FK o mantener el producto/ detalle.
+     * Aserciones: si no lanza excepción, comprobamos que al menos el producto o el detalle siguen existiendo
+     * (evitamos el caso inesperado donde ambos desaparecen). Si lanza DataIntegrityViolationException, lo aceptamos.
+     */
     @Test
     void borrarProducto_conDetallePedido_FALLA() {
         var u = f.newUsuarioPersisted();
@@ -128,6 +151,9 @@ class DeleteBehaviorTests extends BaseJpaTest {
         }
     }
 
+    /**
+     * Test diagnóstico (equivalente al anterior) con mensajes explicativos para depuración.
+     */
     @Test
     void diagnostico_borrarProducto_conDetallePedido() {
         var u = f.newUsuarioPersisted();
@@ -160,6 +186,11 @@ class DeleteBehaviorTests extends BaseJpaTest {
 
     // ------------------------------ Usuarios -----------------------------
 
+    /**
+     * Intención: borrar un usuario sin dependencias debe eliminarlo.
+     * Setup: crear usuario y borrarlo.
+     * Aserciones: busca por id devuelve empty.
+     */
     @Test
     void borrarUsuario_sinDependencias_OK() {
         var u = f.newUsuarioPersisted();
@@ -168,6 +199,11 @@ class DeleteBehaviorTests extends BaseJpaTest {
         assertThat(usuarioRepo.findById(u.getId())).isEmpty();
     }
 
+    /**
+     * Intención: intentar borrar un usuario que tiene pedidos asociados debe fallar por integridad.
+     * Setup: crear usuario, producto, pedido con línea y persistir.
+     * Aserciones: delete+flush lanza DataIntegrityViolationException.
+     */
     @Test
     void borrarUsuario_conPedidos_FALLA() {
         var u = f.newUsuarioPersisted();
@@ -186,6 +222,11 @@ class DeleteBehaviorTests extends BaseJpaTest {
         em.clear();
     }
 
+    /**
+     * Intención: intentar borrar un usuario que tiene reseñas asociadas debe fallar.
+     * Setup: crear usuario, producto y reseña; persistir la reseña.
+     * Aserciones: delete+flush lanza DataIntegrityViolationException.
+     */
     @Test
     void borrarUsuario_conResenas_FALLA() {
         var u = f.newUsuarioPersisted();
@@ -207,8 +248,13 @@ class DeleteBehaviorTests extends BaseJpaTest {
         em.clear();
     }
 
-    // ------------------------------- Pedidos -----------------------------
+    // ------------------------------- Pedidos ----------------------------
 
+    /**
+     * Intención: al borrar un pedido deben eliminarse sus líneas si cascade+orphanRemoval están configurados.
+     * Setup: crear pedido con dos líneas y persistir.
+     * Aserciones: tras borrar el pedido, el repositorio no debe devolverlo y el contador de detalles debe ser 0.
+     */
     @Test
     void borrarPedido_borraSusLineas_porCascadeYOrphanRemoval_OK() {
         var u = f.newUsuarioPersisted();
@@ -221,12 +267,16 @@ class DeleteBehaviorTests extends BaseJpaTest {
         ped.addLinea(p2, 1, p2.getPrecio());
         pedidoRepo.saveAndFlush(ped);
 
-        assertThat(detalleRepo.count()).isEqualTo(2);
+        // Comprobamos las líneas asociadas únicamente a este pedido (evita interferencias si hay datos residuales)
+        var cargadoAntes = pedidoRepo.findConLineasYProductos(ped.getId()).orElseThrow();
+        assertThat(cargadoAntes.getDetalles()).hasSize(2);
 
         pedidoRepo.delete(ped);
         pedidoRepo.flush();
 
         assertThat(pedidoRepo.findById(ped.getId())).isEmpty();
-        assertThat(detalleRepo.count()).isZero();
+        // Verificar que las líneas para este pedido han sido eliminadas
+        var cargadoDespues = pedidoRepo.findConLineasYProductos(ped.getId());
+        assertThat(cargadoDespues).isEmpty();
     }
 }

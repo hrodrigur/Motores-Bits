@@ -12,6 +12,10 @@ import es.unex.cum.mdai.motoresbits.data.model.entity.Pedido;
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByUsuarioId(Long usuarioId);
+
+    // Devuelve true si existe al menos un pedido para el usuario dado
+    boolean existsByUsuarioId(Long usuarioId);
+
     @Query("""
            select distinct p
            from Pedido p

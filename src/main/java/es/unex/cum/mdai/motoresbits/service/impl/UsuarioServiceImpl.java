@@ -101,7 +101,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new UsuarioNoEncontradoException(id));
 
         // Regla de negocio: no eliminar si tiene pedidos
-        boolean tienePedidos = !pedidoRepository.findByUsuarioId(id).isEmpty();
+        boolean tienePedidos = pedidoRepository.existsByUsuarioId(id);
         if (tienePedidos) {
             throw new UsuarioConPedidosException(id);
         }

@@ -19,7 +19,6 @@ import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
 /**
  * Pruebas centradas en el repositorio de `Pedido` y en el manejo de líneas (DetallePedido).
- *
  * Verifica consultas por usuario, operaciones JOIN FETCH y el comportamiento de orphanRemoval.
  */
 class PedidosRepositoryTest extends BaseJpaTest {
@@ -86,11 +85,18 @@ class PedidosRepositoryTest extends BaseJpaTest {
         var pedido = f.newPedidoPersisted(u, new BigDecimal("25.00"), EstadoPedido.PENDIENTE);
         var linea = pedido.addLinea(p1, 1, p1.getPrecio());
         pedidoRepo.saveAndFlush(pedido);
-        assertThat(detalleRepo.count()).isEqualTo(1);
+
+        // Comprobar específicamente las líneas del pedido creado (evita interferencias entre tests)
+        var cargado = pedidoRepo.findConLineasYProductos(pedido.getId()).orElseThrow();
+        assertThat(cargado.getDetalles()).hasSize(1);
 
         pedido.removeLinea(linea);
         pedidoRepo.saveAndFlush(pedido);
-        assertThat(detalleRepo.count()).isZero();
+        // La consulta con LEFT JOIN FETCH devuelve el pedido aunque no tenga detalles;
+        // aquí comprobamos que el pedido sigue existiendo y que sus detalles están vacíos.
+        var cargadoDespOpt = pedidoRepo.findConLineasYProductos(pedido.getId());
+        assertThat(cargadoDespOpt).isPresent();
+        assertThat(cargadoDespOpt.get().getDetalles()).isEmpty();
     }
 
     @Test

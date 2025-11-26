@@ -108,4 +108,15 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         usuarioRepository.delete(u);
     }
+
+    @Override
+    public Usuario actualizarPerfil(Long id, String direccion, String telefono) {
+        Usuario u = usuarioRepository.findById(id)
+                .orElseThrow(() -> new UsuarioNoEncontradoException(id));
+
+        u.setDireccion(direccion);
+        u.setTelefono(telefono);
+
+        return usuarioRepository.save(u);
+    }
 }

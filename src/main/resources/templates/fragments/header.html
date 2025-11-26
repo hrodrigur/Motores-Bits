@@ -1,0 +1,29 @@
+<!-- header fragment -->
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="header">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" th:href="@{/}">Motores & Bits</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <!-- Mostrar Catálogo solo si el usuario está autenticado -->
+          <li class="nav-item" th:if="${session.usuarioId != null}"><a class="nav-link" th:href="@{/catalogo}">Catálogo</a></li>
+        </ul>
+        <ul class="navbar-nav">
+          <!-- Mostrar Carrito solo si el usuario está autenticado -->
+          <li class="nav-item" th:if="${session.usuarioId != null}">
+            <a class="nav-link" th:href="@{/carrito}">Carrito</a>
+          </li>
+          <li class="nav-item" th:if="${session.usuarioId == null}">
+            <a class="nav-link" th:href="@{/login}">Iniciar sesión</a>
+          </li>
+          <li class="nav-item" th:if="${session.usuarioId != null}">
+            <a class="nav-link" th:href="@{/perfil}" th:text="${session.usuarioNombre}"></a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</div>

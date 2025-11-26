@@ -30,6 +30,10 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Resena> resenas = new ArrayList<>();
 
+    // Nuevos campos opcionales para completar perfil
+    private String direccion;
+    private String telefono;
+
     public Long getId() {
         return id;
     }
@@ -84,5 +88,21 @@ public class Usuario {
 
     public void setResenas(List<Resena> resenas) {
         this.resenas = resenas;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
 }

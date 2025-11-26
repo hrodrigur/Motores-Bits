@@ -1,0 +1,46 @@
+package es.unex.cum.mdai.motoresbits.web.controller;
+
+import es.unex.cum.mdai.motoresbits.data.model.entity.Categoria;
+import es.unex.cum.mdai.motoresbits.data.model.entity.Producto;
+import es.unex.cum.mdai.motoresbits.service.CatalogoService;
+import es.unex.cum.mdai.motoresbits.service.ResenaService;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@Controller
+public class CatalogoController {
+
+    private final CatalogoService catalogoService;
+    private final ResenaService resenaService;
+
+    public CatalogoController(CatalogoService catalogoService, ResenaService resenaService) {
+        this.catalogoService = catalogoService;
+        this.resenaService = resenaService;
+    }
+
+    @GetMapping("/catalogo")
+    public String catalogo(Model model) {
+        model.addAttribute("categorias", catalogoService.listarCategorias());
+        model.addAttribute("productos", catalogoService.listarProductos());
+        return "catalogo";
+    }
+
+    @GetMapping("/categoria/{id}")
+    public String categoria(@PathVariable Long id, Model model) {
+        Categoria c = catalogoService.obtenerCategoria(id);
+        model.addAttribute("categoria", c);
+        model.addAttribute("productos", catalogoService.listarPorCategoria(id));
+        return "categoria";
+    }
+
+    @GetMapping("/producto/{id}")
+    public String productoDetalle(@PathVariable Long id, Model model) {
+        Producto p = catalogoService.obtenerProducto(id);
+        model.addAttribute("producto", p);
+        model.addAttribute("resenas", resenaService.listarPorProducto(id));
+        return "producto-detalle";
+    }
+}
+

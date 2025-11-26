@@ -40,4 +40,9 @@ public interface UsuarioService {
      * Si tiene pedidos, lanza una excepción de regla de negocio.
      */
     void eliminarUsuario(Long id);
+
+    /**
+     * Actualiza campos de perfil basicos del usuario.
+     */
+    Usuario actualizarPerfil(Long id, String direccion, String telefono);
 }

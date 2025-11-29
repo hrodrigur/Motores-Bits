@@ -78,7 +78,7 @@ class ResenasRepositoryTest extends BaseJpaTest {
         rInv.setComentario("muy bajo");
 
         assertThatThrownBy(() -> resenaRepo.saveAndFlush(rInv))
-                .isInstanceOf(jakarta.validation.ConstraintViolationException.class);
+                .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test

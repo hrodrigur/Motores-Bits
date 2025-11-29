@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,45 +11,54 @@
   <div class="container mt-4">
     <div class="row">
       <div class="col-md-8">
-        <h1 th:text="${producto.nombre}"></h1>
-        <p>Referencia: <span th:text="${producto.referencia}"></span></p>
-        <p>Precio: <span th:text="${producto.precio}"></span></p>
-        <p>Stock: <span th:text="${producto.stock}"></span></p>
-        <form method="post" th:action="@{/carrito/agregar}">
-          <input type="hidden" name="idProducto" th:value="${producto.id}" />
-          <div class="mb-3">
-            <label class="form-label">Cantidad</label>
-            <input class="form-control" type="number" name="cantidad" value="1" min="1" />
-          </div>
-          <button class="btn btn-primary" type="submit">Añadir al carrito</button>
-        </form>
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="product-image mb-3">
+              <!-- Imagen del producto: si hubiera una URL usar th:src en un <img> -->
+              <span th:if="${producto.imagen == null}">Sin imagen</span>
+              <img th:if="${producto.imagen != null}" th:src="@{${producto.imagen}}" alt="Imagen" style="max-height:200px; object-fit:contain;"/>
+            </div>
+             <h1 th:text="${producto.nombre}"></h1>
+            <p>Referencia: <span th:text="${producto.referencia}"></span></p>
+            <p>Precio: <span class="price" th:text="${producto.precio}"></span></p>
+            <p>Stock: <span class="badge-stock" th:text="${producto.stock}"></span></p>
+             <form method="post" th:action="@{/carrito/agregar}">
+               <input type="hidden" name="idProducto" th:value="${producto.id}" />
+               <div class="mb-3">
+                 <label class="form-label">Cantidad</label>
+                 <input class="form-control" type="number" name="cantidad" value="1" min="1" />
+               </div>
+              <button class="btn btn-primary" type="submit">Añadir al carrito</button>
+             </form>
 
-        <hr />
-        <h3>Reseñas</h3>
-        <div th:if="${resenas}">
-          <div th:each="r : ${resenas}" class="mb-2">
-            <strong th:text="${r.usuario.nombre}"></strong>
-            <span th:text="${r.puntuacion}"></span>
-            <p th:text="${r.comentario}"></p>
+            <hr />
+            <h3>Reseñas</h3>
+             <div th:if="${resenas}">
+               <div th:each="r : ${resenas}" class="mb-2">
+                 <strong th:text="${r.usuario.nombre}"></strong>
+                 <span th:text="${r.puntuacion}"></span>
+                 <p th:text="${r.comentario}"></p>
+               </div>
+             </div>
+             <div>
+               <form th:action="@{/producto/{id}/resena(id=${producto.id})}" method="post">
+                 <div class="mb-3">
+                   <label class="form-label">Puntuación</label>
+                   <input class="form-control" type="number" name="puntuacion" min="1" max="5" required />
+                 </div>
+                 <div class="mb-3">
+                   <label class="form-label">Comentario</label>
+                   <textarea class="form-control" name="comentario" required></textarea>
+                 </div>
+                 <button class="btn btn-secondary" type="submit">Publicar reseña</button>
+               </form>
+             </div>
           </div>
         </div>
-        <div>
-          <form th:action="@{/producto/{id}/resena(id=${producto.id})}" method="post">
-            <div class="mb-3">
-              <label class="form-label">Puntuación</label>
-              <input class="form-control" type="number" name="puntuacion" min="1" max="5" required />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Comentario</label>
-              <textarea class="form-control" name="comentario" required></textarea>
-            </div>
-            <button class="btn btn-secondary" type="submit">Publicar reseña</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div th:replace="fragments/footer :: footer"></div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+       </div>
+     </div>
+   </div>
+   <div th:replace="fragments/footer :: footer"></div>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+ </body>
+ </html>

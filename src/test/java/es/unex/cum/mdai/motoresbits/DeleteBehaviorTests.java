@@ -125,10 +125,10 @@ class DeleteBehaviorTests extends BaseJpaTest {
     void borrarProducto_conDetallePedido_FALLA() {
         var u = f.newUsuarioPersisted();
         var c = f.newCategoriaPersisted("Aceites");
-        var p = f.newProductoPersisted(c, "OIL", new java.math.BigDecimal("12.00"));
+        var p = f.newProductoPersisted(c, "OIL", new BigDecimal("12.00"));
 
-        var pedido = f.newPedidoPersisted(u, new java.math.BigDecimal("12.00"),
-                es.unex.cum.mdai.motoresbits.data.model.enums.EstadoPedido.PENDIENTE);
+        var pedido = f.newPedidoPersisted(u, new BigDecimal("12.00"),
+                EstadoPedido.PENDIENTE);
         pedido.addLinea(p, 1, p.getPrecio());
         pedidoRepo.saveAndFlush(pedido);
 
@@ -144,7 +144,7 @@ class DeleteBehaviorTests extends BaseJpaTest {
             assertThat(prodPresent || detallePresent)
                 .withFailMessage("Ni el producto ni el detalle existen tras intentar borrar: comportamiento inesperado")
                 .isTrue();
-        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+        } catch (DataIntegrityViolationException ex) {
             // En algunas BD el borrado lanza DataIntegrityViolationException por FK;
             // aquí capturamos ese comportamiento y limpiamos el contexto para seguir.
             em.clear();
@@ -161,7 +161,7 @@ class DeleteBehaviorTests extends BaseJpaTest {
         var p = f.newProductoPersisted(c, "DIAG-1", new BigDecimal("12.00"));
 
         var pedido = f.newPedidoPersisted(u, new BigDecimal("12.00"),
-                es.unex.cum.mdai.motoresbits.data.model.enums.EstadoPedido.PENDIENTE);
+                EstadoPedido.PENDIENTE);
         pedido.addLinea(p, 1, p.getPrecio());
         pedidoRepo.saveAndFlush(pedido);
 
@@ -178,7 +178,7 @@ class DeleteBehaviorTests extends BaseJpaTest {
             assertThat(prodPresent || detallePresent)
                 .withFailMessage("Ni el producto ni el detalle existen tras intentar borrar: comportamiento inesperado")
                 .isTrue();
-        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+        } catch (DataIntegrityViolationException ex) {
             // En instalaciones con FK en la BD es normal que falle con excepción; limpiamos la sesión.
             em.clear();
         }

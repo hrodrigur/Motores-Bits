@@ -1,8 +1,13 @@
 <!-- header fragment -->
 <div xmlns:th="http://www.thymeleaf.org" th:fragment="header">
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <!-- Header CSS -->
+  <link rel="stylesheet" th:href="@{/css/header.css}" />
+  <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
-      <a class="navbar-brand" th:href="@{/}">Motores & Bits</a>
+      <a class="navbar-brand" th:href="@{/}">
+        <span class="logo-mark" aria-hidden="true"></span>
+        Motores & Bits
+      </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -20,7 +25,7 @@
             <a class="nav-link" th:href="@{/login}">Iniciar sesión</a>
           </li>
           <li class="nav-item" th:if="${session.usuarioId != null}">
-            <a class="nav-link" th:href="@{/perfil}" th:text="${session.usuarioNombre}"></a>
+            <a class="nav-link usuario-nombre" th:href="@{/perfil}" th:text="${session.usuarioNombre}"></a>
           </li>
         </ul>
       </div>

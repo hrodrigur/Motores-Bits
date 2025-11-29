@@ -1,0 +1,61 @@
+/* header.css - estilos del header (fondo azul oscuro, texto blanco, acento naranja) */
+:root{
+  --brand-bg: #0b3d91; /* color de marca para header/footer */
+  --accent: #ff6a00; /* naranja llamativo */
+  --header-text: #ffffff; /* texto en header blanco */
+  --header-height: 64px;
+}
+
+/* Contenedor del header */
+.navbar{
+  background: linear-gradient(90deg, var(--brand-bg), #08306a);
+  height: var(--header-height);
+  border-bottom: none;
+}
+
+.navbar .navbar-brand{
+  color: var(--header-text) !important;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  display:flex;
+  align-items:center;
+}
+
+/* Marca pequeña junto al nombre */
+.navbar .navbar-brand .logo-mark{
+  width:36px;
+  height:36px;
+  margin-right:10px;
+  border-radius:6px;
+  background: linear-gradient(180deg, rgba(255,106,0,0.95), rgba(255,154,80,0.9));
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+.navbar .nav-link{
+  color: var(--header-text) !important;
+  padding: 8px 10px;
+  border-radius:6px;
+}
+
+.navbar .nav-link:hover{
+  color: var(--header-text) !important;
+  background: rgba(255,255,255,0.04);
+}
+
+/* Toggler adaptado al header oscuro */
+.navbar-toggler{
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.navbar-toggler-icon{ filter: invert(1) brightness(1.2); }
+
+/* Resaltar el nombre de usuario */
+.navbar .usuario-nombre{
+  color: var(--header-text) !important;
+  font-weight:700;
+}
+
+@media (max-width: 768px) {
+  .navbar{ height: auto; padding: 8px 12px; }
+  .navbar .navbar-brand{ margin-right: 6px; }
+}

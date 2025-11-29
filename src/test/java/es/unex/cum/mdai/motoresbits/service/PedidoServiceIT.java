@@ -481,13 +481,13 @@ import static org.mockito.Mockito.when;
 
         when(pedidoRepoMock.findById(999L)).thenReturn(java.util.Optional.of(p));
 
-        assertThrows(es.unex.cum.mdai.motoresbits.service.exception.EstadoPedidoInvalidoException.class,
+        assertThrows(EstadoPedidoInvalidoException.class,
                 () -> service.cambiarEstado(999L, nuevo));
     }
 
     @Test
     @DisplayName("concurrencia_confirmarPedidos_noSobrevender")
-    @org.springframework.transaction.annotation.Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void concurrencia_confirmarPedidos_noSobrevender() throws InterruptedException {
         // producto con stock 1, dos pedidos que piden 1 cada uno
         Categoria cat = new Categoria();

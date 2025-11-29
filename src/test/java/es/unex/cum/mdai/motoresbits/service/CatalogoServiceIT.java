@@ -538,7 +538,7 @@ class CatalogoServiceIT {
         r.setComentario("buena");
         resenaRepository.save(r);
 
-        assertThrows(es.unex.cum.mdai.motoresbits.service.exception.ProductoConDependenciasException.class,
+        assertThrows(ProductoConDependenciasException.class,
                 () -> catalogoService.eliminarProducto(p.getId()));
     }
 

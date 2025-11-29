@@ -1,0 +1,44 @@
+/* index.css - página principal: fondo blanco, texto negro, acentos naranja */
+:root{
+  --page-bg: #ffffff; /* fondo blanco */
+  --text-color: #0b0b0b; /* negro para texto */
+  --accent: #ff6a00; /* naranja */
+  --card-bg: #f7f9fb; /* tarjeta sutil */
+}
+
+body{
+  background: var(--page-bg);
+  color: var(--text-color);
+}
+
+/* Cabecera de la página */
+.hero{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background: linear-gradient(90deg, rgba(255,106,0,0.06), rgba(0,0,0,0.01));
+  padding: 28px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+}
+
+.hero .title{ color: var(--text-color); font-size:1.8rem; font-weight:700; }
+.hero .subtitle{ color: #4b5563; }
+
+.categories .card, .products .card{
+  min-height: 120px;
+}
+
+.products .card .card-body .card-title{ font-size:1rem; font-weight:600; }
+
+.price{ color: var(--accent); font-weight:800; }
+
+.card{ background: var(--card-bg); border: 1px solid rgba(11,11,11,0.04); }
+
+.btn-primary{ background: var(--accent); border: none; color: #fff; }
+.btn-outline-primary{ color: var(--accent); border-color: rgba(11,11,11,0.06); }
+
+/* Grid responsive */
+@media (max-width:768px){
+  .hero{ flex-direction:column; gap:12px; }
+}

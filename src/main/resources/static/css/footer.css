@@ -1,0 +1,34 @@
+/* footer.css - footer oscuro coherente con header y sticky al fondo */
+:root{
+  --brand-bg: #0b3d91; /* mismo azul que header */
+  --footer-text: #ffffff;
+  --accent: #ff6a00;
+}
+
+.footer{
+  background: linear-gradient(180deg, var(--brand-bg), #051a3a);
+  color: var(--footer-text);
+  padding: 18px 0;
+  border-top: none;
+  width:100%;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+}
+.footer .container{ display:flex; align-items:center; justify-content:space-between; }
+.footer .brand-small{ color: var(--accent); font-weight:700; }
+.footer a{ color: var(--footer-text) !important; text-decoration:none; }
+.footer a:hover{ color: var(--accent) !important; }
+
+/* Forzar color blanco en el texto del footer (por si Bootstrap u otros estilos lo sobrescriben) */
+.footer, .footer .container, .footer .footer-copy, .footer .brand-small, .footer .text-muted {
+  color: var(--footer-text) !important;
+}
+
+/* Asegurar que el body no quede oculto por el footer fijo: se recomienda padding-bottom igual a la altura del footer */
+body{ padding-bottom: 70px; }
+
+@media (max-width:768px){
+  .footer .container{ flex-direction:column; gap:8px; align-items:center; }
+}
+

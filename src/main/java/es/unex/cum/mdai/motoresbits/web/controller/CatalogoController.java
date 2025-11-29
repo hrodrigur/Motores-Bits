@@ -4,10 +4,11 @@ import es.unex.cum.mdai.motoresbits.data.model.entity.Categoria;
 import es.unex.cum.mdai.motoresbits.data.model.entity.Producto;
 import es.unex.cum.mdai.motoresbits.service.CatalogoService;
 import es.unex.cum.mdai.motoresbits.service.ResenaService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class CatalogoController {
@@ -38,9 +39,16 @@ public class CatalogoController {
     @GetMapping("/producto/{id}")
     public String productoDetalle(@PathVariable Long id, Model model) {
         Producto p = catalogoService.obtenerProducto(id);
+        if (p == null) {
+            return "error/404";
+        }
+
         model.addAttribute("producto", p);
         model.addAttribute("resenas", resenaService.listarPorProducto(id));
+        model.addAttribute("mediaPuntuacion",
+                resenaService.mediaPuntuacionPorProducto(id).orElse(null));
+
         return "producto-detalle";
     }
-}
 
+}

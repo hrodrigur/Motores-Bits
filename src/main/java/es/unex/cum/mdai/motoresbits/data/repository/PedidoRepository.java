@@ -3,6 +3,7 @@ package es.unex.cum.mdai.motoresbits.data.repository;
 import java.util.List;
 import java.util.Optional;
 
+import es.unex.cum.mdai.motoresbits.data.model.enums.EstadoPedido;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByUsuarioId(Long usuarioId);
 
+    List<Pedido> findByUsuarioIdAndEstadoNot(Long usuarioId, EstadoPedido estado);
     // Devuelve true si existe al menos un pedido para el usuario dado
     boolean existsByUsuarioId(Long usuarioId);
 

@@ -53,8 +53,9 @@ public class Pedido implements Serializable {
 
     public void removeLinea(DetallePedido detalle) {
         if (detalle != null) {
+            // SOLO quitamos el detalle de la colección.
+            // Con orphanRemoval = true, Hibernate se encargará de borrarlo en BD.
             this.detalles.remove(detalle);
-            detalle.attach(null, null);
         }
     }
 

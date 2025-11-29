@@ -1,64 +1,117 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title th:text="${producto.nombre} + ' - Motores & Bits'">Producto</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${producto.nombre} + ' - Motores & Bits'">Detalle del producto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body>
-  <div th:replace="fragments/header :: header"></div>
-  <div class="container mt-4">
-    <div class="row">
-      <div class="col-md-8">
-        <div class="card mb-3">
-          <div class="card-body">
-            <div class="product-image mb-3">
-              <!-- Imagen del producto: si hubiera una URL usar th:src en un <img> -->
-              <span th:if="${producto.imagen == null}">Sin imagen</span>
-              <img th:if="${producto.imagen != null}" th:src="@{${producto.imagen}}" alt="Imagen" style="max-height:200px; object-fit:contain;"/>
-            </div>
-             <h1 th:text="${producto.nombre}"></h1>
-            <p>Referencia: <span th:text="${producto.referencia}"></span></p>
-            <p>Precio: <span class="price" th:text="${producto.precio}"></span></p>
-            <p>Stock: <span class="badge-stock" th:text="${producto.stock}"></span></p>
-             <form method="post" th:action="@{/carrito/agregar}">
-               <input type="hidden" name="idProducto" th:value="${producto.id}" />
-               <div class="mb-3">
-                 <label class="form-label">Cantidad</label>
-                 <input class="form-control" type="number" name="cantidad" value="1" min="1" />
-               </div>
-              <button class="btn btn-primary" type="submit">Añadir al carrito</button>
-             </form>
 
-            <hr />
-            <h3>Reseñas</h3>
-             <div th:if="${resenas}">
-               <div th:each="r : ${resenas}" class="mb-2">
-                 <strong th:text="${r.usuario.nombre}"></strong>
-                 <span th:text="${r.puntuacion}"></span>
-                 <p th:text="${r.comentario}"></p>
-               </div>
-             </div>
-             <div>
-               <form th:action="@{/producto/{id}/resena(id=${producto.id})}" method="post">
-                 <div class="mb-3">
-                   <label class="form-label">Puntuación</label>
-                   <input class="form-control" type="number" name="puntuacion" min="1" max="5" required />
-                 </div>
-                 <div class="mb-3">
-                   <label class="form-label">Comentario</label>
-                   <textarea class="form-control" name="comentario" required></textarea>
-                 </div>
-                 <button class="btn btn-secondary" type="submit">Publicar reseña</button>
-               </form>
-             </div>
-          </div>
+<!-- HEADER -->
+<div th:replace="fragments/header :: header"></div>
+
+<div class="container mt-4">
+
+    <!-- Mensajes flash -->
+    <div th:if="${resenaOk}" class="alert alert-success" th:text="${resenaOk}"></div>
+    <div th:if="${resenaError}" class="alert alert-danger" th:text="${resenaError}"></div>
+
+    <!-- Información del producto -->
+    <h1 class="mb-4" th:text="${producto.nombre}">Nombre del producto</h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <p>
+                <strong>ID:</strong>
+                <span th:text="${producto.id}">1</span>
+            </p>
+
+            <p>
+                <strong>Precio:</strong>
+                <span class="fw-bold text-success" th:text="${producto.precio}">0.0</span> €
+            </p>
+
+            <!-- Media de puntuación -->
+            <p th:if="${mediaPuntuacion != null}">
+                <strong>Valoración media:</strong>
+                <span th:text="${#numbers.formatDecimal(mediaPuntuacion, 1, 1)}"></span> / 5
+            </p>
+
+            <a th:href="@{/catalogo}" class="btn btn-secondary mt-3 me-2">Volver al catálogo</a>
+            <a th:href="@{/}" class="btn btn-primary mt-3">Volver al inicio</a>
         </div>
-       </div>
-     </div>
-   </div>
-   <div th:replace="fragments/footer :: footer"></div>
-   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
- </body>
- </html>
+    </div>
+
+    <!-- Formulario de reseña (solo si está logueado) -->
+    <div th:if="${session.usuarioId != null}">
+        <h3>Dejar una reseña</h3>
+
+        <form th:action="@{/producto/{id}/resena(id=${producto.id})}" method="post" class="mb-4">
+
+            <div class="mb-3">
+                <label for="puntuacion" class="form-label">Puntuación</label>
+                <select id="puntuacion" name="puntuacion" class="form-select" required>
+                    <option value="5">5 - Excelente</option>
+                    <option value="4">4 - Muy buena</option>
+                    <option value="3">3 - Normal</option>
+                    <option value="2">2 - Mala</option>
+                    <option value="1">1 - Muy mala</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="comentario" class="form-label">Comentario</label>
+                <textarea id="comentario" name="comentario" class="form-control" rows="3"
+                          placeholder="Cuéntanos tu experiencia con este producto" required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success">Enviar reseña</button>
+        </form>
+    </div>
+
+    <!-- Mensaje si NO está logueado -->
+    <div th:if="${session.usuarioId == null}" class="alert alert-info">
+        <a th:href="@{/login}">Inicia sesión</a> para dejar una reseña de este producto.
+    </div>
+
+    <!-- Listado de reseñas -->
+    <h3 class="mt-4">Reseñas</h3>
+
+    <div th:if="${resenas == null or #lists.isEmpty(resenas)}">
+        <p>Todavía no hay reseñas para este producto.</p>
+    </div>
+
+    <div th:if="${resenas != null and !#lists.isEmpty(resenas)}" class="list-group mb-5">
+
+        <div class="list-group-item" th:each="r : ${resenas}">
+            <div class="d-flex justify-content-between">
+
+                <div>
+                    <strong th:text="${r.puntuacion} + ' / 5'">5 / 5</strong>
+                    <span class="ms-2" th:if="${r.usuario != null}"
+                          th:text="${r.usuario.nombre}">Usuario</span>
+                </div>
+
+                <!-- FECHA -->
+                <small th:if="${r.creadaEn != null}"
+                       th:text="${#temporals.format(r.creadaEn, 'dd/MM/yyyy HH:mm')}">
+                    01/01/2025 12:00
+                </small>
+
+            </div>
+
+            <p class="mb-1 mt-2" th:text="${r.comentario}">Comentario del usuario...</p>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<div th:replace="fragments/footer :: footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

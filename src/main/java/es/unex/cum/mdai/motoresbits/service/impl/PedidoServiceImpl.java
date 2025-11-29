@@ -66,7 +66,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional(readOnly = true)
     public List<Pedido> listarPedidosUsuario(Long idUsuario) {
-        return pedidoRepository.findByUsuarioId(idUsuario);
+        return pedidoRepository.findByUsuarioIdAndEstadoNot(idUsuario, EstadoPedido.CREADO);
     }
 
     // -------------------- LÍNEAS DE PEDIDO --------------------
@@ -107,6 +107,11 @@ public class PedidoServiceImpl implements PedidoService {
             throw new IllegalArgumentException("La cantidad no puede ser negativa");
         }
 
+        if (nuevaCantidad == 0) {
+            // Reutilizamos la lógica de eliminar línea
+            return eliminarLinea(idPedido, idProducto);
+        }
+
         Pedido pedido = obtenerPedidoParaModificacion(idPedido);
 
         DetallePedido detalle = buscarDetalleEnPedido(pedido, idProducto);
@@ -114,12 +119,7 @@ public class PedidoServiceImpl implements PedidoService {
             throw new LineaPedidoNoEncontradaException(idPedido, idProducto);
         }
 
-        if (nuevaCantidad == 0) {
-            // eliminar línea
-            pedido.removeLinea(detalle);
-        } else {
-            detalle.setCantidad(nuevaCantidad);
-        }
+        detalle.setCantidad(nuevaCantidad);
 
         recalcularTotal(pedido);
 
@@ -128,16 +128,17 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public Pedido eliminarLinea(Long idPedido, Long idProducto) {
+
+        // 1) Borramos la línea directamente en BD
+        detallePedidoRepository.deleteByPedidoAndProducto(idPedido, idProducto);
+
+        // 2) Recargamos el pedido con sus detalles restantes
         Pedido pedido = obtenerPedidoParaModificacion(idPedido);
 
-        DetallePedido detalle = buscarDetalleEnPedido(pedido, idProducto);
-        if (detalle == null) {
-            throw new LineaPedidoNoEncontradaException(idPedido, idProducto);
-        }
-
-        pedido.removeLinea(detalle);
+        // 3) Recalculamos el total
         recalcularTotal(pedido);
 
+        // 4) Guardamos y devolvemos
         return pedidoRepository.save(pedido);
     }
 

@@ -41,12 +41,18 @@ public class UsuarioController {
     @PostMapping("/perfil")
     public String actualizarPerfil(HttpSession session,
                                    @RequestParam(required = false) String direccion,
-                                   @RequestParam(required = false) String telefono) {
+                                   @RequestParam(required = false) String telefono, Model model) {
         Long usuarioId = (Long) session.getAttribute("usuarioId");
         if (usuarioId == null) {
             return "redirect:/login";
         }
-
+        // Validación del teléfono: debe tener exactamente 9 dígitos
+        if (telefono != null && !telefono.matches("\\d{9}")) {
+            model.addAttribute("usuario", usuarioService.getById(usuarioId));
+            model.addAttribute("pedidos", pedidoService.listarPedidosUsuario(usuarioId));
+            model.addAttribute("errorTelefono", "El teléfono debe contener exactamente 9 dígitos.");
+            return "perfil";
+        }
         usuarioService.actualizarPerfil(usuarioId, direccion, telefono);
         // Mantenerse en perfil y mostrar mensaje de guardado
         return "redirect:/perfil?saved=true";

@@ -47,7 +47,8 @@
           </div>
           <div class="mb-3">
             <label for="telefono" class="form-label">Teléfono</label>
-            <input id="telefono" class="form-control" type="text" name="telefono" th:value="${usuario.telefono}" />
+            <input id="telefono" class="form-control" type="tel" name="telefono" th:value="${usuario.telefono}" pattern="[0-9]{9}" inputmode="numeric"
+                   title="El telefono debe de tener 9 digitos y que todos sean numericos" required />
           </div>
           <button class="btn btn-primary" type="submit">Guardar</button>
         </form>
@@ -73,7 +74,7 @@
     if (perfilSaved === true) {
       // cerrar collapse
       var collapseEl = document.getElementById('editProfile');
-      if (collapseEl) {
+      if (collapseEl && collapseEl.classList.contains('show')) {
         // Usar la API de Bootstrap para cerrar si está abierto
         var bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
         bsCollapse.hide();

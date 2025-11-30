@@ -18,4 +18,6 @@ public interface ResenaService {
     Optional<Double> mediaPuntuacionPorProducto(Long idProducto);
 
     Resena obtenerResena(Long idResena);
+
+    List<Resena> listarResenasUsuario(Long idUsuario);
 }

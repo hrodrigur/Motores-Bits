@@ -18,4 +18,6 @@ public interface ResenaRepository extends JpaRepository<Resena, Long> {
 
     // Devuelve true si existe al menos una reseña para el producto
     boolean existsByProductoId(Long productoId);
+
+    List<Resena> findByUsuarioId(Long idUsuario);
 }

@@ -1,98 +1,181 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Perfil - Motores & Bits</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Perfil - Motores & Bits</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body>
-  <div th:replace="fragments/header :: header"></div>
-  <div class="container mt-4">
+
+<div th:replace="fragments/header :: header"></div>
+
+<div class="container mt-4">
+
     <h1>Perfil</h1>
 
     <div th:if="${saved}" class="alert alert-success">Perfil actualizado correctamente.</div>
 
-    <!-- Información general siempre visible -->
+    <!-- Información general -->
     <div class="card mb-3">
-      <div class="card-body">
-        <h5 th:text="${usuario.nombre}"></h5>
-        <p th:text="${usuario.email}"></p>
-        <p><strong>Dirección:</strong>
-          <span th:if="${usuario.direccion != null and usuario.direccion != ''}" th:text="${usuario.direccion}"></span>
-          <span th:unless="${usuario.direccion != null and usuario.direccion != ''}">No especificado</span>
-        </p>
-        <p><strong>Teléfono:</strong>
-          <span th:if="${usuario.telefono != null and usuario.telefono != ''}" th:text="${usuario.telefono}"></span>
-          <span th:unless="${usuario.telefono != null and usuario.telefono != ''}">No especificado</span>
-        </p>
+        <div class="card-body">
 
-        <!-- Botón para mostrar el formulario de edición de dirección/telefono -->
-        <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#editProfile" aria-expanded="false" aria-controls="editProfile">
-          Editar perfil
-        </button>
-          <form th:action="@{/logout}" method="post" class="d-inline">
-              <button type="submit" class="btn btn-danger ms-2">Cerrar sesión</button>
-          </form>
-      </div>
+            <h5 th:text="${usuario.nombre}"></h5>
+            <p th:text="${usuario.email}"></p>
+
+            <p><strong>Dirección:</strong>
+                <span th:if="${usuario.direccion != null and usuario.direccion != ''}"
+                      th:text="${usuario.direccion}"></span>
+                <span th:unless="${usuario.direccion != null and usuario.direccion != ''}">No especificado</span>
+            </p>
+
+            <p><strong>Teléfono:</strong>
+                <span th:if="${usuario.telefono != null and usuario.telefono != ''}"
+                      th:text="${usuario.telefono}"></span>
+                <span th:unless="${usuario.telefono != null and usuario.telefono != ''}">No especificado</span>
+            </p>
+
+            <!-- Botones editar / logout -->
+            <button class="btn btn-secondary" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#editProfile">
+                Editar perfil
+            </button>
+
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-danger ms-2">Cerrar sesión</button>
+            </form>
+        </div>
     </div>
 
-    <!-- Formulario colapsable para añadir/editar dirección y teléfono -->
-    <div class="collapse" id="editProfile">
-      <div class="card card-body mb-3">
-        <form method="post" action="/perfil" th:action="@{/perfil}">
-          <!-- Si la aplicación usa Spring Security, incluir el token CSRF -->
-          <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+    <!-- Formulario edición -->
+    <div id="editProfile" class="collapse">
+        <div class="card card-body mb-3">
+            <form method="post" th:action="@{/perfil}">
+                <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}" />
 
-          <div class="mb-3">
-            <label for="direccion" class="form-label">Dirección</label>
-            <input id="direccion" class="form-control" type="text" name="direccion" th:value="${usuario.direccion}" />
-          </div>
-          <div class="mb-3">
-            <label for="telefono" class="form-label">Teléfono</label>
-            <input id="telefono" class="form-control" type="tel" name="telefono" th:value="${usuario.telefono}" pattern="[0-9]{9}" inputmode="numeric"
-                   title="El telefono debe de tener 9 digitos y que todos sean numericos" required />
-          </div>
-          <button class="btn btn-primary" type="submit">Guardar</button>
-        </form>
-      </div>
+                <div class="mb-3">
+                    <label class="form-label">Dirección</label>
+                    <input class="form-control" type="text" name="direccion" th:value="${usuario.direccion}" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Teléfono</label>
+                    <input class="form-control" type="tel" name="telefono"
+                           th:value="${usuario.telefono}"
+                           pattern="[0-9]{9}" inputmode="numeric"
+                           title="El teléfono debe tener 9 dígitos" required />
+                </div>
+
+                <button class="btn btn-primary" type="submit">Guardar</button>
+            </form>
+        </div>
     </div>
+
+    <!-- =============================== -->
+    <!--        MIS PEDIDOS            -->
+    <!-- =============================== -->
 
     <h3>Mis pedidos</h3>
+
     <div th:if="${pedidos}">
-      <ul class="list-group">
-        <li class="list-group-item d-flex justify-content-between align-items-center" th:each="p : ${pedidos}">
-          <div>
-            <strong th:text="${p.id}"></strong> - <span th:text="${p.estado}"></span> - <span th:text="${p.total}"></span>
-          </div>
-          <div>
-            <form th:action="@{/perfil/pedido/eliminar}" method="post" class="d-inline">
-              <input type="hidden" name="idPedido" th:value="${p.id}" />
-              <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar este pedido? Esta operación no se puede deshacer.')">Eliminar</button>
-            </form>
-          </div>
-        </li>
-      </ul>
+        <ul class="list-group">
+
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                th:each="p : ${pedidos}">
+
+                <!-- Información del pedido -->
+                <div>
+                    <strong th:text="${p.id}"></strong>
+                    -
+                    <span th:text="${p.estado}"></span>
+                    -
+                    <span th:text="${p.total} + ' €'"></span>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex gap-2">
+
+                    <!-- BOTÓN DETALLES -->
+                    <a th:href="@{/perfil/pedido/{id}(id=${p.id})}"
+                       class="btn btn-sm btn-outline-primary">
+                        Detalles
+                    </a>
+
+                    <!-- BOTÓN ELIMINAR (deshabilitado si PAGADO o ENTREGADO) -->
+                    <form th:action="@{/perfil/pedido/eliminar}" method="post">
+                        <input type="hidden" name="idPedido" th:value="${p.id}" />
+
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger"
+                                th:disabled="${p.estado.name() == 'PAGADO' or p.estado.name() == 'ENTREGADO'}"
+                                onclick="return confirm('¿Seguro que deseas eliminar el pedido?')">
+                            Eliminar
+                        </button>
+                    </form>
+
+                </div>
+
+            </li>
+
+        </ul>
     </div>
 
-  </div>
-  <div th:replace="fragments/footer :: footer"></div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script th:inline="javascript">
+    <!-- ================================== -->
+    <!--        LISTADO DE RESEÑAS          -->
+    <!-- ================================== -->
+
+    <h3 class="mt-4">Mis reseñas</h3>
+
+    <div th:if="${#lists.isEmpty(resenas)}">
+        <p class="text-muted">No has escrito reseñas todavía.</p>
+    </div>
+
+    <ul class="list-group" th:if="${!#lists.isEmpty(resenas)}">
+        <li class="list-group-item d-flex justify-content-between align-items-center"
+            th:each="r : ${resenas}">
+
+            <div>
+                <strong th:text="${r.producto.nombre}"></strong><br>
+
+                ⭐ <span th:text="${r.puntuacion}">5</span> / 5<br>
+
+                <em th:text="${r.comentario}"></em><br>
+
+                <small class="text-muted"
+                       th:text="${#temporals.format(r.creadaEn, 'dd/MM/yyyy HH:mm')}"></small>
+            </div>
+
+            <!-- BOTÓN ELIMINAR RESEÑA -->
+            <form th:action="@{/perfil/resena/eliminar}" method="post"
+                  onsubmit="return confirm('¿Seguro que quieres eliminar esta reseña?')">
+                <input type="hidden" name="idResena" th:value="${r.id}" />
+                <input type="hidden" th:if="${_csrf != null}"
+                       name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+            </form>
+
+        </li>
+    </ul>
+
+</div>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
     /*<![CDATA[*/
-    /* Si la variable 'saved' no está presente, evaluamos a false de forma segura. */
     var perfilSaved = /*[[${saved}]]*/ false;
     if (perfilSaved === true) {
-      // cerrar collapse
-      var collapseEl = document.getElementById('editProfile');
-      if (collapseEl && collapseEl.classList.contains('show')) {
-        // Usar la API de Bootstrap para cerrar si está abierto
-        var bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
-        bsCollapse.hide();
-      }
+        var collapseEl = document.getElementById('editProfile');
+        if (collapseEl && collapseEl.classList.contains('show')) {
+            var bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
+            bsCollapse.hide();
+        }
     }
     /*]]>*/
-  </script>
+</script>
+
 </body>
 </html>

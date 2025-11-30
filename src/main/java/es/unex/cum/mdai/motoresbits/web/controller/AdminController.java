@@ -1,8 +1,11 @@
 package es.unex.cum.mdai.motoresbits.web.controller;
 
+import es.unex.cum.mdai.motoresbits.data.model.entity.Usuario;
 import es.unex.cum.mdai.motoresbits.service.CatalogoService;
 import es.unex.cum.mdai.motoresbits.service.PedidoService;
 import es.unex.cum.mdai.motoresbits.service.ResenaService;
+import es.unex.cum.mdai.motoresbits.service.UsuarioService;
+import es.unex.cum.mdai.motoresbits.service.exception.EstadoPedidoInvalidoException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -17,11 +20,13 @@ public class AdminController {
     private final CatalogoService catalogoService;
     private final PedidoService pedidoService;
     private final ResenaService resenaService;
+    private final UsuarioService usuarioService;
 
-    public AdminController(CatalogoService catalogoService, PedidoService pedidoService, ResenaService resenaService) {
+    public AdminController(CatalogoService catalogoService, PedidoService pedidoService, ResenaService resenaService, UsuarioService usuarioService) {
         this.catalogoService = catalogoService;
         this.pedidoService = pedidoService;
         this.resenaService = resenaService;
+        this.usuarioService = usuarioService;
     }
 
     private boolean isNotAdmin(HttpSession session) {
@@ -118,11 +123,28 @@ public class AdminController {
     }
 
     @PostMapping("/pedidos/cambiar-estado")
-    public String cambiarEstado(HttpSession session, @RequestParam Long idPedido, @RequestParam String nuevoEstado) {
+    public String cambiarEstado(HttpSession session,
+                                @RequestParam Long idPedido,
+                                @RequestParam String nuevoEstado,
+                                Model model) {
         if (isNotAdmin(session)) return "redirect:/login";
-        pedidoService.cambiarEstado(idPedido, es.unex.cum.mdai.motoresbits.data.model.enums.EstadoPedido.valueOf(nuevoEstado));
-        return "redirect:/admin/pedidos";
+
+        try {
+            pedidoService.cambiarEstado(
+                    idPedido,
+                    es.unex.cum.mdai.motoresbits.data.model.enums.EstadoPedido.valueOf(nuevoEstado)
+            );
+            return "redirect:/admin/pedidos";
+        } catch (EstadoPedidoInvalidoException ex) {
+
+            // Recargamos la tabla de pedidos con el mensaje de error
+            model.addAttribute("errorEstado", ex.getMessage());
+            model.addAttribute("pedidos", pedidoService.listarTodosPedidos());
+
+            return "admin/pedidos"; // vuelve a la misma vista
+        }
     }
+
 
     // ---------- RESEÑAS (moderación) ----------
     @PostMapping("/resena/eliminar/admin")
@@ -141,5 +163,41 @@ public class AdminController {
         model.addAttribute("productosCount", catalogoService.listarProductos().size());
         model.addAttribute("pedidosCount", pedidoService.listarTodosPedidos().size());
         return "admin/index";
+    }
+
+    // ---------- Usuarios ----------
+    @GetMapping("/usuario/{id}")
+    public String verCliente(@PathVariable Long id, HttpSession session, Model model) {
+        if (isNotAdmin(session)) return "redirect:/login";
+
+        var usuario = usuarioService.getById(id);
+
+        // Cargamos las colecciones con sus servicios, NO desde usuario.pedidos
+        var pedidosUsuario = pedidoService.listarPedidosUsuario(id);
+
+        var resenasUsuario = resenaService.obtenerResena(id); // o el que tengas
+
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("pedidosUsuario", pedidosUsuario);
+        model.addAttribute("resenasUsuario", resenasUsuario);
+
+        return "admin/usuario-detalle";
+    }
+
+    @PostMapping("/pedidos/eliminar")
+    public String eliminarPedido(HttpSession session,
+                                 @RequestParam Long idPedido,
+                                 Model model) {
+        if (isNotAdmin(session)) return "redirect:/login";
+
+        try {
+            pedidoService.eliminarPedido(idPedido);
+            return "redirect:/admin/pedidos";   // recarga la lista
+        } catch (Exception ex) {
+            // si quieres mostrar el error en la misma página:
+            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("pedidos", pedidoService.listarTodosPedidos());
+            return "admin/pedidos";
+        }
     }
 }

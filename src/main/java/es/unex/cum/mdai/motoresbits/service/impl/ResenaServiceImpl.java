@@ -86,4 +86,9 @@ public class ResenaServiceImpl implements ResenaService {
     public Optional<Double> mediaPuntuacionPorProducto(Long idProducto) {
         return resenaRepository.avgPuntuacionByProductoId(idProducto);
     }
+
+    @Override
+    public List<Resena> listarResenasUsuario(Long idUsuario) {
+        return resenaRepository.findByUsuarioId(idUsuario);
+    }
 }

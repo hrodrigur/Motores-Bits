@@ -18,22 +18,24 @@
         </ul>
         <ul class="navbar-nav">
           <!-- Enlace admin visible solo para rol ADMIN (panel principal) -->
-          <li class="nav-item" th:if="${session.usuarioRol == 'ADMIN'}">
+          <li class="nav-item" th:if="${usuarioRol == 'ADMIN'}">
             <a class="nav-link" th:href="@{/admin}">Admin</a>
           </li>
-          <!-- Mostrar Carrito solo si NO es admin -->
-          <li class="nav-item" th:if="${session.usuarioRol != 'ADMIN'}">
+
+          <!-- Mostrar Carrito solo si NO es admin; el acceso se protegerá en el controlador -->
+          <li class="nav-item" th:if="${usuarioRol != 'ADMIN'}">
             <a class="nav-link position-relative" th:href="@{/carrito}" aria-label="Ver carrito">
               Carrito
               <!-- Badge con número de items: solo mostrar si hay al menos 1 item -->
-              <span class="cart-badge" th:if="${session.pedidoCantidad != null and session.pedidoCantidad > 0}" th:text="${session.pedidoCantidad}"></span>
+              <span class="cart-badge" th:if="${pedidoCantidad != null and pedidoCantidad > 0}" th:text="${pedidoCantidad}"></span>
             </a>
           </li>
-          <li class="nav-item" th:if="${session.usuarioId == null}">
+
+          <li class="nav-item" th:if="${usuarioId == null}">
             <a class="nav-link" th:href="@{/login}">Iniciar sesión</a>
           </li>
-          <li class="nav-item" th:if="${session.usuarioId != null}">
-            <a class="nav-link usuario-nombre" th:href="@{/perfil}" th:text="${session.usuarioNombre}" aria-label="Ir al perfil de usuario"></a>
+          <li class="nav-item" th:if="${usuarioId != null}">
+            <a class="nav-link usuario-nombre" th:href="@{/perfil}" th:text="${usuarioNombre}" aria-label="Ir al perfil de usuario"></a>
           </li>
         </ul>
       </div>

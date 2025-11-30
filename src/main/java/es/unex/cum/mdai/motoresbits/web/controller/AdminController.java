@@ -1,6 +1,5 @@
 package es.unex.cum.mdai.motoresbits.web.controller;
 
-import es.unex.cum.mdai.motoresbits.data.model.entity.Usuario;
 import es.unex.cum.mdai.motoresbits.service.CatalogoService;
 import es.unex.cum.mdai.motoresbits.service.PedidoService;
 import es.unex.cum.mdai.motoresbits.service.ResenaService;
@@ -148,9 +147,14 @@ public class AdminController {
 
     // ---------- RESEÑAS (moderación) ----------
     @PostMapping("/resena/eliminar/admin")
-    public String eliminarResenaAdmin(HttpSession session, @RequestParam Long idResena) {
+    public String eliminarResenaAdmin(HttpSession session, @RequestParam Long idResena, jakarta.servlet.http.HttpServletRequest request) {
         if (isNotAdmin(session)) return "redirect:/login";
         resenaService.eliminarResena(idResena);
+        // Intentar volver a la página previa (Referer) para mejor UX; fallback a /admin/pedidos
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isBlank()) {
+            return "redirect:" + referer;
+        }
         return "redirect:/admin/pedidos";
     }
 

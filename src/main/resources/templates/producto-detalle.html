@@ -145,6 +145,14 @@
                     <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar tu reseña?')">Eliminar reseña</button>
                 </form>
             </div>
+            <!-- Botón eliminar reseña para ADMIN (visible para administradores) -->
+            <div th:if="${session.usuarioRol != null and session.usuarioRol == 'ADMIN'}" class="mt-2">
+                <form th:action="@{/admin/resena/eliminar/admin}" method="post" class="d-inline">
+                    <input type="hidden" name="idResena" th:value="${r.id}" />
+                    <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar esta reseña como administrador?')">Eliminar como admin</button>
+                </form>
+            </div>
         </div>
 
     </div>

@@ -135,17 +135,21 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     public Pedido eliminarLinea(Long idPedido, Long idProducto) {
 
-        // 1) Borramos la línea directamente en BD
-        detallePedidoRepository.deleteByPedidoAndProducto(idPedido, idProducto);
+        // 1) Cargamos el pedido con sus líneas y comprobamos si la línea existe
+        Pedido pedidoActual = obtenerPedidoParaModificacion(idPedido);
+        DetallePedido detalle = buscarDetalleEnPedido(pedidoActual, idProducto);
+        if (detalle == null) {
+            throw new LineaPedidoNoEncontradaException(idPedido, idProducto);
+        }
 
-        // 2) Recargamos el pedido con sus detalles restantes
-        Pedido pedido = obtenerPedidoParaModificacion(idPedido);
+        // 2) Quitamos la línea de la colección (orphanRemoval=true en Pedido eliminará la fila en BD)
+        pedidoActual.removeLinea(detalle);
 
         // 3) Recalculamos el total
-        recalcularTotal(pedido);
+        recalcularTotal(pedidoActual);
 
         // 4) Guardamos y devolvemos
-        return pedidoRepository.save(pedido);
+        return pedidoRepository.save(pedidoActual);
     }
 
     // -------------------- ESTADO Y ELIMINACIÓN --------------------

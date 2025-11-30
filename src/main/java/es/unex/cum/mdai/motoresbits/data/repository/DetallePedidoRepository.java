@@ -12,6 +12,8 @@ public interface DetallePedidoRepository extends JpaRepository<DetallePedido, De
 
     boolean existsByProducto_Id(Long productoId);
     Optional<DetallePedido> findByPedido_IdAndProducto_Id(Long pedidoId, Long productoId);
+    boolean existsByPedido_IdAndProducto_Id(Long pedidoId, Long productoId);
+
     @Modifying
     @Query("DELETE FROM DetallePedido d " +
             "WHERE d.pedido.id = :pedidoId AND d.producto.id = :productoId")

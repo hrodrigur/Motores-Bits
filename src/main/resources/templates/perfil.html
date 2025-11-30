@@ -154,6 +154,15 @@
                        name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <button class="btn btn-sm btn-outline-danger">Eliminar</button>
             </form>
+            <!-- BOTÓN ELIMINAR RESEÑA como ADMIN (visible solo para admins) -->
+            <div th:if="${session.usuarioRol != null and session.usuarioRol == 'ADMIN'}" class="ms-2">
+                <form th:action="@{/admin/resena/eliminar/admin}" method="post" onsubmit="return confirm('¿Eliminar reseña como admin?')">
+                    <input type="hidden" name="idResena" th:value="${r.id}" />
+                    <input type="hidden" th:if="${_csrf != null}"
+                           name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button class="btn btn-sm btn-danger">Eliminar como admin</button>
+                </form>
+            </div>
 
         </li>
     </ul>

@@ -5,6 +5,7 @@ import es.unex.cum.mdai.motoresbits.data.model.entity.Pedido;
 import es.unex.cum.mdai.motoresbits.data.model.entity.Producto;
 import es.unex.cum.mdai.motoresbits.service.CatalogoService;
 import es.unex.cum.mdai.motoresbits.service.PedidoService;
+import es.unex.cum.mdai.motoresbits.service.exception.StockInsuficienteException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -130,10 +131,11 @@ public class PedidoController {
             return "carrito";
         }
 
+        Long nuevoId = null;
         try {
             // crear pedido persistente y añadir líneas
             var nuevo = pedidoService.crearPedido(usuarioId);
-            Long nuevoId = nuevo.getId();
+            nuevoId = nuevo.getId();
             for (Map.Entry<Long,Integer> e : cart.entrySet()) {
                 pedidoService.agregarLinea(nuevoId, e.getKey(), e.getValue());
             }
@@ -148,7 +150,28 @@ public class PedidoController {
 
             model.addAttribute("success", "Pedido confirmado correctamente");
             return "checkout";
+        } catch (StockInsuficienteException ex) {
+            // Si falla por falta de stock, vaciamos el carrito en sesión y mostramos el error
+            // además eliminamos el pedido creado para no dejar registros CREADO en BD
+            try {
+                if (nuevoId != null) {
+                    pedidoService.eliminarPedido(nuevoId);
+                }
+            } catch (Exception ignore) {
+                // si no se puede eliminar, no interrumpimos el flujo; seguimos limpiando sesión
+            }
+            session.removeAttribute("cartItems");
+            session.removeAttribute("pedidoCantidad");
+            session.removeAttribute("pedidoId");
+            model.addAttribute("error", ex.getMessage());
+            return "carrito";
         } catch (Exception ex) {
+            // en cualquier otra excepción intentamos limpiar el pedido temporal también
+            try {
+                if (nuevoId != null) {
+                    pedidoService.eliminarPedido(nuevoId);
+                }
+            } catch (Exception ignore) {}
             model.addAttribute("error", ex.getMessage());
             return "carrito";
         }

@@ -19,7 +19,7 @@
 
     <!-- Carrito con pedido -->
     <div th:if="${pedido != null}">
-        <h5>Número de pedido: <span th:text="${pedido.id}">1</span></h5>
+        <!-- No mostrar número de pedido en la vista pública del carrito; se muestra en el perfil -->
 
         <table class="table table-striped mt-3">
             <thead>
@@ -53,10 +53,12 @@
             <span th:text="${pedido.total}">0.00</span> €
         </p>
 
-        <!-- Confirmar pedido -->
-        <form th:action="@{/pedido/confirmar}" method="post" class="mt-3">
+        <!-- Confirmar pedido (oculto para admin) -->
+        <div th:if="${session.usuarioRol != 'ADMIN'}">
+          <form th:action="@{/pedido/confirmar}" method="post" class="mt-3">
             <button type="submit" class="btn btn-success">Confirmar pedido</button>
-        </form>
+          </form>
+        </div>
     </div>
 
     <!-- Mensajes de éxito/error -->

@@ -144,4 +144,34 @@ public class CatalogoServiceImpl implements CatalogoService {
 
         productoRepository.delete(p);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<es.unex.cum.mdai.motoresbits.service.dto.ProductoAdminDto> listarProductosConCategoria() {
+        var productos = productoRepository.findAll();
+        var result = new java.util.ArrayList<es.unex.cum.mdai.motoresbits.service.dto.ProductoAdminDto>();
+        for (var p : productos) {
+            var dto = new es.unex.cum.mdai.motoresbits.service.dto.ProductoAdminDto();
+            dto.setId(p.getId()); dto.setNombre(p.getNombre()); dto.setReferencia(p.getReferencia());
+            dto.setPrecio(p.getPrecio()); dto.setStock(p.getStock());
+            dto.setNombreCategoria(p.getCategoria() != null ? p.getCategoria().getNombre() : "");
+            result.add(dto);
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<es.unex.cum.mdai.motoresbits.service.dto.ProductoAdminDto> listarPorCategoriaConCategoria(Long idCategoria) {
+        var productos = productoRepository.findByCategoriaId(idCategoria);
+        var result = new java.util.ArrayList<es.unex.cum.mdai.motoresbits.service.dto.ProductoAdminDto>();
+        for (var p : productos) {
+            var dto = new es.unex.cum.mdai.motoresbits.service.dto.ProductoAdminDto();
+            dto.setId(p.getId()); dto.setNombre(p.getNombre()); dto.setReferencia(p.getReferencia());
+            dto.setPrecio(p.getPrecio()); dto.setStock(p.getStock());
+            dto.setNombreCategoria(p.getCategoria() != null ? p.getCategoria().getNombre() : "");
+            result.add(dto);
+        }
+        return result;
+    }
 }

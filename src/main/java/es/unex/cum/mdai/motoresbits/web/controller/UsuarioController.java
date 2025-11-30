@@ -68,4 +68,31 @@ public class UsuarioController {
         return "mis-pedidos";
     }
 
+    @PostMapping("/perfil/pedido/eliminar")
+    public String eliminarPedidoPerfil(HttpSession session,
+                                       @RequestParam Long idPedido,
+                                       Model model) {
+        Long usuarioId = (Long) session.getAttribute("usuarioId");
+        if (usuarioId == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            var pedido = pedidoService.obtenerPedido(idPedido);
+            if (pedido.getUsuario() == null || !usuarioId.equals(pedido.getUsuario().getId())) {
+                model.addAttribute("error", "No tienes permiso para eliminar este pedido.");
+                model.addAttribute("usuario", usuarioService.getById(usuarioId));
+                model.addAttribute("pedidos", pedidoService.listarPedidosUsuario(usuarioId));
+                return "perfil";
+            }
+
+            pedidoService.eliminarPedido(idPedido);
+            return "redirect:/perfil?deleted=true";
+        } catch (Exception ex) {
+            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("usuario", usuarioService.getById(usuarioId));
+            model.addAttribute("pedidos", pedidoService.listarPedidosUsuario(usuarioId));
+            return "perfil";
+        }
+    }
 }

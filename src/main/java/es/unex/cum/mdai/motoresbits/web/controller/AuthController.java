@@ -36,6 +36,8 @@ public class AuthController {
             Usuario u = usuarioService.login(email, contrasena);
             session.setAttribute("usuarioId", u.getId());
             session.setAttribute("usuarioNombre", u.getNombre());
+            // guardar rol en sesión para mostrar acciones de admin
+            if (u.getRol() != null) session.setAttribute("usuarioRol", u.getRol().name());
             return "redirect:/";
         } catch (Exception ex) {
             model.addAttribute("error", "Credenciales inválidas");

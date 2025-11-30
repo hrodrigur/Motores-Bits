@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panel de administración</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body>
+  <div th:replace="fragments/header :: header"></div>
+  <div class="container mt-4">
+    <h1>Panel de administración</h1>
+    <p>Bienvenido al panel de administración. Selecciona la sección a gestionar:</p>
+
+    <div class="list-group">
+      <a th:href="@{/admin/categorias}" class="list-group-item list-group-item-action">Gestionar categorías (<span th:text="${categoriasCount}">0</span>)</a>
+      <a th:href="@{/admin/productos}" class="list-group-item list-group-item-action">Gestionar productos (<span th:text="${productosCount}">0</span>)</a>
+      <a th:href="@{/admin/pedidos}" class="list-group-item list-group-item-action">Gestionar pedidos (<span th:text="${pedidosCount}">0</span>)</a>
+    </div>
+  </div>
+  <div th:replace="fragments/footer :: footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

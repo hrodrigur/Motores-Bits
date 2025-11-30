@@ -2,6 +2,7 @@ package es.unex.cum.mdai.motoresbits.service;
 
 import es.unex.cum.mdai.motoresbits.data.model.entity.Categoria;
 import es.unex.cum.mdai.motoresbits.data.model.entity.Producto;
+import es.unex.cum.mdai.motoresbits.service.dto.ProductoAdminDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,4 +28,7 @@ public interface CatalogoService {
     List<Producto> listarPorCategoria(Long idCategoria);
     void eliminarProducto(Long id);
 
+    // Nuevos métodos para listar productos con nombre de categoría precargado
+    java.util.List<ProductoAdminDto> listarProductosConCategoria();
+    java.util.List<ProductoAdminDto> listarPorCategoriaConCategoria(Long idCategoria);
 }

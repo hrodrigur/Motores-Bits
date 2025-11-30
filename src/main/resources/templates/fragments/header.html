@@ -8,24 +8,32 @@
         <span class="logo-mark" aria-hidden="true"></span>
         Motores & Bits
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-          <!-- Mostrar Catálogo solo si el usuario está autenticado -->
-          <li class="nav-item" th:if="${session.usuarioId != null}"><a class="nav-link" th:href="@{/catalogo}">Catálogo</a></li>
+          <!-- Mostrar Catálogo siempre -->
+          <li class="nav-item"><a class="nav-link" th:href="@{/catalogo}">Catálogo</a></li>
         </ul>
         <ul class="navbar-nav">
-          <!-- Mostrar Carrito solo si el usuario está autenticado -->
-          <li class="nav-item" th:if="${session.usuarioId != null}">
-            <a class="nav-link" th:href="@{/carrito}">Carrito</a>
+          <!-- Enlace admin visible solo para rol ADMIN (panel principal) -->
+          <li class="nav-item" th:if="${session.usuarioRol == 'ADMIN'}">
+            <a class="nav-link" th:href="@{/admin}">Admin</a>
+          </li>
+          <!-- Mostrar Carrito solo si NO es admin -->
+          <li class="nav-item" th:if="${session.usuarioRol != 'ADMIN'}">
+            <a class="nav-link position-relative" th:href="@{/carrito}" aria-label="Ver carrito">
+              Carrito
+              <!-- Badge con número de items: solo mostrar si hay al menos 1 item -->
+              <span class="cart-badge" th:if="${session.pedidoCantidad != null and session.pedidoCantidad > 0}" th:text="${session.pedidoCantidad}"></span>
+            </a>
           </li>
           <li class="nav-item" th:if="${session.usuarioId == null}">
             <a class="nav-link" th:href="@{/login}">Iniciar sesión</a>
           </li>
           <li class="nav-item" th:if="${session.usuarioId != null}">
-            <a class="nav-link usuario-nombre" th:href="@{/perfil}" th:text="${session.usuarioNombre}"></a>
+            <a class="nav-link usuario-nombre" th:href="@{/perfil}" th:text="${session.usuarioNombre}" aria-label="Ir al perfil de usuario"></a>
           </li>
         </ul>
       </div>

@@ -41,4 +41,31 @@ public class ResenaController {
         // Volver al detalle del producto
         return "redirect:/producto/" + id;
     }
+
+    @PostMapping("/resena/eliminar")
+    public String eliminarResena(@RequestParam Long idResena, HttpSession session, RedirectAttributes redirectAttributes) {
+        Long usuarioId = (Long) session.getAttribute("usuarioId");
+        if (usuarioId == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            var r = resenaService.obtenerResena(idResena);
+            Long productoId = r.getProducto() != null ? r.getProducto().getId() : null;
+            Long autorId = r.getUsuario() != null ? r.getUsuario().getId() : null;
+            // usuarioId ya está garantizado (no null); comprobar propiedad
+            if (!usuarioId.equals(autorId)) {
+                redirectAttributes.addFlashAttribute("resenaError", "No tienes permiso para eliminar esta reseña.");
+                return productoId != null ? "redirect:/producto/" + productoId : "redirect:/";
+            }
+
+            resenaService.eliminarResena(idResena);
+            redirectAttributes.addFlashAttribute("resenaOk", "Reseña eliminada correctamente.");
+            return productoId != null ? "redirect:/producto/" + productoId : "redirect:/";
+         } catch (Exception ex) {
+             redirectAttributes.addFlashAttribute("resenaError", ex.getMessage());
+             // intentar redirigir al producto asociado cuando sea posible
+             try { var r2 = resenaService.obtenerResena(idResena); return r2.getProducto() != null ? "redirect:/producto/" + r2.getProducto().getId() : "redirect:/"; } catch (Exception e) { return "redirect:/"; }
+         }
+    }
 }

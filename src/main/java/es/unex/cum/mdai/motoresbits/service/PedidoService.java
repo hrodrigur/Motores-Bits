@@ -54,4 +54,9 @@ public interface PedidoService {
      * Si no hay stock suficiente para algún producto, lanza StockInsuficienteException.
      */
     Pedido confirmarPedido(Long idPedido);
+
+    /**
+     * Lista todos los pedidos (para uso de administrador)
+     */
+    java.util.List<Pedido> listarTodosPedidos();
 }

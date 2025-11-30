@@ -29,8 +29,8 @@
                             Ver
                         </a>
 
-                        <!-- Botón añadir al carrito -->
-                        <form th:action="@{/carrito/agregar}" method="post">
+                        <!-- Botón añadir al carrito (oculto para admin) -->
+                        <form th:if="${session.usuarioRol != 'ADMIN'}" th:action="@{/carrito/agregar}" method="post">
                             <input type="hidden" name="idProducto" th:value="${p.id}" />
                             <input type="hidden" name="cantidad" value="1" />
                             <button type="submit" class="btn btn-sm btn-success">

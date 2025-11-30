@@ -10,7 +10,6 @@ import es.unex.cum.mdai.motoresbits.service.ResenaService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,6 +71,13 @@ public class ResenaServiceImpl implements ResenaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Resena obtenerResena(Long idResena) {
+        return resenaRepository.findById(idResena)
+                .orElseThrow(() -> new IllegalArgumentException("Reseña no encontrada"));
+    }
+
+    @Override
     public List<Resena> listarPorProducto(Long idProducto) {
         return resenaRepository.findByProductoId(idProducto);
     }
@@ -81,4 +87,3 @@ public class ResenaServiceImpl implements ResenaService {
         return resenaRepository.avgPuntuacionByProductoId(idProducto);
     }
 }
-

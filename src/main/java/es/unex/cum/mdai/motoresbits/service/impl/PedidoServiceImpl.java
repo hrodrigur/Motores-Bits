@@ -69,6 +69,12 @@ public class PedidoServiceImpl implements PedidoService {
         return pedidoRepository.findByUsuarioIdAndEstadoNot(idUsuario, EstadoPedido.CREADO);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<Pedido> listarTodosPedidos() {
+        return pedidoRepository.findAllConUsuarioYLineasYProductos();
+    }
+
     // -------------------- LÍNEAS DE PEDIDO --------------------
 
     @Override

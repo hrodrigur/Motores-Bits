@@ -55,6 +55,27 @@
   font-weight:700;
 }
 
+/* Badge para mostrar número de items en el carrito */
+.navbar .cart-badge{
+  display:inline-block;
+  min-width:20px;
+  padding:2px 6px;
+  font-size:12px;
+  line-height:1;
+  color:var(--brand-bg);
+  background:#fff;
+  border-radius:12px;
+  margin-left:8px;
+  font-weight:700;
+  text-align:center;
+}
+
+/* Si el badge está sobre un enlace con posición relativa, ajustamos su posición en pantallas pequeñas */
+.navbar .position-relative .cart-badge{
+  position:relative;
+  top:0;
+}
+
 @media (max-width: 768px) {
   .navbar{ height: auto; padding: 8px 12px; }
   .navbar .navbar-brand{ margin-right: 6px; }

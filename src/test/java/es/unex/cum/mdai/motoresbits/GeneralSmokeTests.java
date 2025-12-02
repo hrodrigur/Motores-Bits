@@ -26,8 +26,6 @@ import es.unex.cum.mdai.motoresbits.data.repository.ResenaRepository;
 import es.unex.cum.mdai.motoresbits.data.repository.UsuarioRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.validation.ConstraintViolationException;
 import org.assertj.core.data.Offset;
 
@@ -47,9 +45,6 @@ class GeneralSmokeTests extends BaseJpaTest {
     @Autowired PedidoRepository pedidoRepo;
     @Autowired DetallePedidoRepository detalleRepo;
     @Autowired ResenaRepository resenaRepo;
-
-    @PersistenceContext
-    private EntityManager em;
 
     // --------------------------- Usuarios --------------------------------
 
@@ -113,7 +108,7 @@ class GeneralSmokeTests extends BaseJpaTest {
     // ---------------------------- Reseñas --------------------------------
 
     @Test
-    void resenas_crear_listar_validarYMedia() {
+    void resenas_crear_listarYMedia() {
         var u1 = f.newUsuarioPersisted();
         var u2 = f.newUsuarioPersisted();
         var c = f.newCategoriaPersisted("Frenos");
@@ -126,17 +121,6 @@ class GeneralSmokeTests extends BaseJpaTest {
         r1.setComentario("Muy buena");
         try { r1.setCreadaEn(LocalDateTime.now()); } catch (Throwable ignored) {}
         resenaRepo.saveAndFlush(r1);
-
-        var rInv = new Resena();
-        rInv.setUsuario(u2);
-        rInv.setProducto(prod);
-        rInv.setPuntuacion(6);
-        rInv.setComentario("exceso");
-
-        assertThatThrownBy(() -> resenaRepo.saveAndFlush(rInv))
-                .isInstanceOf(ConstraintViolationException.class);
-
-        em.clear();
 
         var r2 = new Resena();
         r2.setUsuario(u2);
@@ -151,6 +135,22 @@ class GeneralSmokeTests extends BaseJpaTest {
         var media = resenaRepo.avgPuntuacionByProductoId(prod.getId()).orElseThrow();
         assertThat(media).isCloseTo(4.0, Offset.offset(1e-4));
     }
+    @Test
+    void resenas_puntuacionInvalida_lanzaConstraintViolation() {
+        var u = f.newUsuarioPersisted();
+        var c = f.newCategoriaPersisted("Frenos");
+        var prod = f.newProductoPersisted(c, "PF", new BigDecimal("19.95"));
+
+        var rInv = new Resena();
+        rInv.setUsuario(u);
+        rInv.setProducto(prod);
+        rInv.setPuntuacion(6); // inválida
+        rInv.setComentario("exceso");
+
+        assertThatThrownBy(() -> resenaRepo.saveAndFlush(rInv))
+                .isInstanceOf(ConstraintViolationException.class);
+    }
+
 
     // ---------------------------- Pedidos --------------------------------
 

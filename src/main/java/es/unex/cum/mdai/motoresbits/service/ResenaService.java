@@ -20,4 +20,6 @@ public interface ResenaService {
     Resena obtenerResena(Long idResena);
 
     List<Resena> listarResenasUsuario(Long idUsuario);
+
+    void eliminarResenasDeProducto(Long idProducto);
 }

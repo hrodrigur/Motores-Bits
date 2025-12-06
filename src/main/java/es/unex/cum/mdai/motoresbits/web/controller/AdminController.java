@@ -100,16 +100,12 @@ public class AdminController {
     }
 
     @PostMapping("/productos/eliminar")
-    public String eliminarProducto(HttpSession session, @RequestParam Long id, Model model) {
+    public String eliminarProducto(HttpSession session,
+                                   @RequestParam Long id) {
         if (isNotAdmin(session)) return "redirect:/login";
-        try {
-            catalogoService.eliminarProducto(id);
-        } catch (Exception ex) {
-            model.addAttribute("error", ex.getMessage());
-            model.addAttribute("productos", catalogoService.listarProductos());
-            model.addAttribute("categorias", catalogoService.listarCategorias());
-            return "admin/productos";
-        }
+
+        catalogoService.eliminarProducto(id);
+
         return "redirect:/admin/productos";
     }
 

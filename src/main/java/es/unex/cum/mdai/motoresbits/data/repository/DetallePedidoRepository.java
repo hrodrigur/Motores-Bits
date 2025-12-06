@@ -7,6 +7,7 @@ import es.unex.cum.mdai.motoresbits.data.model.entity.DetallePedidoId;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface DetallePedidoRepository extends JpaRepository<DetallePedido, DetallePedidoId> {
 
@@ -19,4 +20,7 @@ public interface DetallePedidoRepository extends JpaRepository<DetallePedido, De
             "WHERE d.pedido.id = :pedidoId AND d.producto.id = :productoId")
     void deleteByPedidoAndProducto(@Param("pedidoId") Long pedidoId,
                                    @Param("productoId") Long productoId);
+    @Modifying
+    @Transactional
+    void deleteByProducto_Id(Long productoId);
 }

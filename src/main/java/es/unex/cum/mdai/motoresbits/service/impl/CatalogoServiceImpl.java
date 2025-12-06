@@ -65,15 +65,22 @@ public class CatalogoServiceImpl implements CatalogoService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void eliminarCategoria(Long id) {
-        Categoria c = obtenerCategoria(id);
 
-        boolean tieneProductos = productoRepository.existsByCategoriaId(id);
-        if (tieneProductos) {
-            throw new CategoriaConProductosException(id);
+        // 1) Obtener la categoría (opcional, pero útil para validar)
+        Categoria categoria = obtenerCategoria(id);
+
+        // 2) Obtener todos los productos de esa categoría
+        List<Producto> productosDeLaCategoria = productoRepository.findByCategoriaId(id);
+
+        // 3) Eliminar cada producto usando tu lógica actual
+        for (Producto p : productosDeLaCategoria) {
+            eliminarProducto(p.getId());
         }
 
-        categoriaRepository.delete(c);
+        // 4) Eliminar la categoría
+        categoriaRepository.delete(categoria);
     }
 
     // ------------------ PRODUCTOS ------------------
@@ -129,21 +136,19 @@ public class CatalogoServiceImpl implements CatalogoService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void eliminarProducto(Long id) {
-        Producto p = obtenerProducto(id);
 
-        boolean tieneDetallesPedido =
-                detallePedidoRepository.existsByProducto_Id(id);
+        // 1) Borrar detalles de pedido del producto
+        detallePedidoRepository.deleteByProducto_Id(id);
 
-        boolean tieneResenas =
-                resenaRepository.existsByProductoId(id);
+        // 2) Borrar todas las reseñas de ese producto
+        resenaRepository.deleteByProductoId(id);
 
-        if (tieneDetallesPedido || tieneResenas) {
-            throw new ProductoConDependenciasException(id);
-        }
-
-        productoRepository.delete(p);
+        // 3) Borrar el propio producto
+        productoRepository.deleteById(id);
     }
+
 
     @Override
     @Transactional(readOnly = true)

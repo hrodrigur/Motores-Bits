@@ -91,4 +91,10 @@ public class ResenaServiceImpl implements ResenaService {
     public List<Resena> listarResenasUsuario(Long idUsuario) {
         return resenaRepository.findByUsuarioId(idUsuario);
     }
+
+    @Override
+    @Transactional
+    public void eliminarResenasDeProducto(Long idProducto) {
+        resenaRepository.deleteByProductoId(idProducto);
+    }
 }

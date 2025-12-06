@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import es.unex.cum.mdai.motoresbits.data.model.entity.Resena;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface ResenaRepository extends JpaRepository<Resena, Long> {
 
@@ -20,4 +22,7 @@ public interface ResenaRepository extends JpaRepository<Resena, Long> {
     boolean existsByProductoId(Long productoId);
 
     List<Resena> findByUsuarioId(Long idUsuario);
+    @Modifying
+    @Transactional
+    void deleteByProductoId(Long productoId);
 }

@@ -73,99 +73,93 @@
     </div>
 
     <!-- =============================== -->
-    <!--        MIS PEDIDOS            -->
+    <!--   MIS PEDIDOS (SOLO NO ADMIN)  -->
     <!-- =============================== -->
+    <div th:if="${session.usuarioRol == null or session.usuarioRol != 'ADMIN'}">
 
-    <h3>Mis pedidos</h3>
+        <h3>Mis pedidos</h3>
 
-    <div th:if="${pedidos}">
-        <ul class="list-group">
+        <div th:if="${pedidos}">
+            <ul class="list-group">
 
+                <li class="list-group-item d-flex justify-content-between align-items-center"
+                    th:each="p : ${pedidos}">
+
+                    <!-- Información del pedido -->
+                    <div>
+                        <strong th:text="${p.id}"></strong>
+                        -
+                        <span th:text="${p.estado}"></span>
+                        -
+                        <span th:text="${p.total} + ' €'"></span>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex gap-2">
+
+                        <!-- BOTÓN DETALLES -->
+                        <a th:href="@{/perfil/pedido/{id}(id=${p.id})}"
+                           class="btn btn-sm btn-outline-primary">
+                            Detalles
+                        </a>
+
+                        <!-- BOTÓN ELIMINAR (deshabilitado si PAGADO o ENTREGADO) -->
+                        <form th:action="@{/perfil/pedido/eliminar}" method="post">
+                            <input type="hidden" name="idPedido" th:value="${p.id}" />
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger"
+                                    th:disabled="${p.estado.name() == 'PAGADO' or p.estado.name() == 'ENTREGADO'}"
+                                    onclick="return confirm('¿Seguro que deseas eliminar el pedido?')">
+                                Eliminar
+                            </button>
+                        </form>
+
+                    </div>
+
+                </li>
+
+            </ul>
+        </div>
+
+        <!-- ================================== -->
+        <!--   LISTADO DE RESEÑAS (SOLO NO ADMIN) -->
+        <!-- ================================== -->
+
+        <h3 class="mt-4">Mis reseñas</h3>
+
+        <div th:if="${#lists.isEmpty(resenas)}">
+            <p class="text-muted">No has escrito reseñas todavía.</p>
+        </div>
+
+        <ul class="list-group" th:if="${!#lists.isEmpty(resenas)}">
             <li class="list-group-item d-flex justify-content-between align-items-center"
-                th:each="p : ${pedidos}">
+                th:each="r : ${resenas}">
 
-                <!-- Información del pedido -->
                 <div>
-                    <strong th:text="${p.id}"></strong>
-                    -
-                    <span th:text="${p.estado}"></span>
-                    -
-                    <span th:text="${p.total} + ' €'"></span>
+                    <strong th:text="${r.producto.nombre}"></strong><br>
+
+                    ⭐ <span th:text="${r.puntuacion}">5</span> / 5<br>
+
+                    <em th:text="${r.comentario}"></em><br>
+
+                    <small class="text-muted"
+                           th:text="${#temporals.format(r.creadaEn, 'dd/MM/yyyy HH:mm')}"></small>
                 </div>
 
-                <!-- Botones -->
-                <div class="d-flex gap-2">
-
-                    <!-- BOTÓN DETALLES -->
-                    <a th:href="@{/perfil/pedido/{id}(id=${p.id})}"
-                       class="btn btn-sm btn-outline-primary">
-                        Detalles
-                    </a>
-
-                    <!-- BOTÓN ELIMINAR (deshabilitado si PAGADO o ENTREGADO) -->
-                    <form th:action="@{/perfil/pedido/eliminar}" method="post">
-                        <input type="hidden" name="idPedido" th:value="${p.id}" />
-
-                        <button type="submit"
-                                class="btn btn-sm btn-outline-danger"
-                                th:disabled="${p.estado.name() == 'PAGADO' or p.estado.name() == 'ENTREGADO'}"
-                                onclick="return confirm('¿Seguro que deseas eliminar el pedido?')">
-                            Eliminar
-                        </button>
-                    </form>
-
-                </div>
-
-            </li>
-
-        </ul>
-    </div>
-
-    <!-- ================================== -->
-    <!--        LISTADO DE RESEÑAS          -->
-    <!-- ================================== -->
-
-    <h3 class="mt-4">Mis reseñas</h3>
-
-    <div th:if="${#lists.isEmpty(resenas)}">
-        <p class="text-muted">No has escrito reseñas todavía.</p>
-    </div>
-
-    <ul class="list-group" th:if="${!#lists.isEmpty(resenas)}">
-        <li class="list-group-item d-flex justify-content-between align-items-center"
-            th:each="r : ${resenas}">
-
-            <div>
-                <strong th:text="${r.producto.nombre}"></strong><br>
-
-                ⭐ <span th:text="${r.puntuacion}">5</span> / 5<br>
-
-                <em th:text="${r.comentario}"></em><br>
-
-                <small class="text-muted"
-                       th:text="${#temporals.format(r.creadaEn, 'dd/MM/yyyy HH:mm')}"></small>
-            </div>
-
-            <!-- BOTÓN ELIMINAR RESEÑA -->
-            <form th:action="@{/perfil/resena/eliminar}" method="post"
-                  onsubmit="return confirm('¿Seguro que quieres eliminar esta reseña?')">
-                <input type="hidden" name="idResena" th:value="${r.id}" />
-                <input type="hidden" th:if="${_csrf != null}"
-                       name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <button class="btn btn-sm btn-outline-danger">Eliminar</button>
-            </form>
-            <!-- BOTÓN ELIMINAR RESEÑA como ADMIN (visible solo para admins) -->
-            <div th:if="${session.usuarioRol != null and session.usuarioRol == 'ADMIN'}" class="ms-2">
-                <form th:action="@{/admin/resena/eliminar/admin}" method="post" onsubmit="return confirm('¿Eliminar reseña como admin?')">
+                <!-- BOTÓN ELIMINAR RESEÑA -->
+                <form th:action="@{/perfil/resena/eliminar}" method="post"
+                      onsubmit="return confirm('¿Seguro que quieres eliminar esta reseña?')">
                     <input type="hidden" name="idResena" th:value="${r.id}" />
                     <input type="hidden" th:if="${_csrf != null}"
                            name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                    <button class="btn btn-sm btn-danger">Eliminar como admin</button>
+                    <button class="btn btn-sm btn-outline-danger">Eliminar</button>
                 </form>
-            </div>
 
-        </li>
-    </ul>
+            </li>
+        </ul>
+
+    </div> <!-- fin bloque NO ADMIN -->
 
 </div>
 

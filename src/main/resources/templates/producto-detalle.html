@@ -23,7 +23,7 @@
 
     <div class="row">
         <div class="col-md-4">
-            <!-- Imagen del producto: intentar cargar una imagen basada en la referencia; si no existe, usar placeholder -->
+            <!-- Imagen del producto -->
             <img th:if="${producto.referencia != null}" th:src="@{/images/{ref}.png(ref=${producto.referencia})}"
                  alt="Imagen del producto" class="img-fluid rounded" />
             <img th:if="${producto.referencia == null}" th:src="@{/images/placeholder-product.svg}" alt="Imagen placeholder" class="img-fluid rounded" />
@@ -59,7 +59,12 @@
                                        th:attr="max=${producto.stock}" required />
                             </div>
 
-                            <button type="submit" class="btn btn-primary" th:disabled="${producto.stock == 0}">Añadir al carrito</button>
+                            <!-- Deshabilitar si no hay stock O si es ADMIN -->
+                            <button type="submit"
+                                    class="btn btn-primary"
+                                    th:disabled="${producto.stock == 0 or (session.usuarioRol != null and session.usuarioRol == 'ADMIN')}">
+                                Añadir al carrito
+                            </button>
                         </form>
 
                         <div th:if="${producto.stock == 0}" class="mt-2 alert alert-warning">Agotado</div>
@@ -73,13 +78,30 @@
 
                     <a th:href="@{/catalogo}" class="btn btn-secondary mt-3 me-2">Volver al catálogo</a>
                     <a th:href="@{/}" class="btn btn-primary mt-3">Volver al inicio</a>
+
+                    <!-- Eliminar producto (solo ADMIN) -->
+                    <div th:if="${session.usuarioRol != null and session.usuarioRol == 'ADMIN'}" class="mt-3">
+                        <form th:action="@{/admin/productos/eliminar}" method="post"
+                              onsubmit="return confirm('¿Seguro que quieres eliminar este producto?')">
+
+                            <!-- OJO: el nombre del parámetro debe ser "id" -->
+                            <input type="hidden" name="id" th:value="${producto.id}" />
+
+                            <input type="hidden" th:if="${_csrf != null}"
+                                   name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <button type="submit" class="btn btn-danger">Eliminar producto</button>
+                        </form>
+                    </div>
+
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Formulario de reseña (solo si está logueado) -->
-    <div th:if="${session.usuarioId != null}">
+    <!-- Formulario de reseña (solo si está logueado Y NO es admin) -->
+    <div th:if="${session.usuarioId != null and (session.usuarioRol == null or session.usuarioRol != 'ADMIN')}">
         <h3>Dejar una reseña</h3>
 
         <form th:action="@{/producto/{id}/resena(id=${producto.id})}" method="post" class="mb-4">
@@ -105,7 +127,7 @@
         </form>
     </div>
 
-    <!-- Mensaje si NO está logueado -->
+    <!-- Mensaje si NO está logueado (los admin no pasan por aquí porque ya están logueados) -->
     <div th:if="${session.usuarioId == null}" class="alert alert-info">
         <a th:href="@{/login}">Inicia sesión</a> para dejar una reseña de este producto.
     </div>
@@ -137,7 +159,8 @@
             </div>
 
             <p class="mb-1 mt-2" th:text="${r.comentario}">Comentario del usuario...</p>
-            <!-- Botón eliminar reseña (visible solo para el autor) -->
+
+            <!-- Botón eliminar reseña (autor) -->
             <div th:if="${session.usuarioId != null and r.usuario != null and session.usuarioId == r.usuario.id}" class="mt-2">
                 <form th:action="@{/resena/eliminar}" method="post" class="d-inline">
                     <input type="hidden" name="idResena" th:value="${r.id}" />
@@ -145,7 +168,8 @@
                     <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar tu reseña?')">Eliminar reseña</button>
                 </form>
             </div>
-            <!-- Botón eliminar reseña para ADMIN (visible para administradores) -->
+
+            <!-- Botón eliminar reseña para ADMIN -->
             <div th:if="${session.usuarioRol != null and session.usuarioRol == 'ADMIN'}" class="mt-2">
                 <form th:action="@{/admin/resena/eliminar/admin}" method="post" class="d-inline">
                     <input type="hidden" name="idResena" th:value="${r.id}" />

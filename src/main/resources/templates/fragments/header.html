@@ -1,44 +1,43 @@
 <!-- header fragment -->
 <div xmlns:th="http://www.thymeleaf.org" th:fragment="header">
-  <!-- Header CSS -->
-  <link rel="stylesheet" th:href="@{/css/header.css}" />
-  <nav class="navbar navbar-expand-lg">
-    <div class="container-fluid">
-      <a class="navbar-brand" th:href="@{/}">
-        <span class="logo-mark" aria-hidden="true"></span>
-        Motores & Bits
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-          <!-- Mostrar Catálogo siempre -->
-          <li class="nav-item"><a class="nav-link" th:href="@{/catalogo}">Catálogo</a></li>
-        </ul>
-        <ul class="navbar-nav">
-          <!-- Enlace admin visible solo para rol ADMIN (panel principal) -->
-          <li class="nav-item" th:if="${usuarioRol == 'ADMIN'}">
-            <a class="nav-link" th:href="@{/admin}">Admin</a>
-          </li>
-
-          <!-- Mostrar Carrito solo si NO es admin; el acceso se protegerá en el controlador -->
-          <li class="nav-item" th:if="${usuarioRol != 'ADMIN'}">
-            <a class="nav-link position-relative" th:href="@{/carrito}" aria-label="Ver carrito">
-              Carrito
-              <!-- Badge con número de items: solo mostrar si hay al menos 1 item -->
-              <span class="cart-badge" th:if="${pedidoCantidad != null and pedidoCantidad > 0}" th:text="${pedidoCantidad}"></span>
+    <!-- Header CSS -->
+    <link rel="stylesheet" th:href="@{/css/header.css}" />
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{/}">
+                <span class="logo-mark" aria-hidden="true"></span>
+                Motores & Bits
             </a>
-          </li>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-          <li class="nav-item" th:if="${usuarioId == null}">
-            <a class="nav-link" th:href="@{/login}">Iniciar sesión</a>
-          </li>
-          <li class="nav-item" th:if="${usuarioId != null}">
-            <a class="nav-link usuario-nombre" th:href="@{/perfil}" th:text="${usuarioNombre}" aria-label="Ir al perfil de usuario"></a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+            <div class="collapse navbar-collapse" id="navbarNav">
+
+                <!-- ⬇️ Aquí el cambio importante: ms-auto -->
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <!-- Enlace admin visible solo para rol ADMIN (panel principal) -->
+                    <li class="nav-item" th:if="${usuarioRol == 'ADMIN'}">
+                        <a class="nav-link" th:href="@{/admin}">Admin</a>
+                    </li>
+
+                    <!-- Mostrar Carrito solo si NO es admin; el acceso se protegerá en el controlador -->
+                    <li class="nav-item" th:if="${usuarioRol != 'ADMIN'}">
+                        <a class="nav-link position-relative" th:href="@{/carrito}" aria-label="Ver carrito">
+                            Carrito
+                            <!-- Badge con número de items: solo mostrar si hay al menos 1 item -->
+                            <span class="cart-badge" th:if="${pedidoCantidad != null and pedidoCantidad > 0}" th:text="${pedidoCantidad}"></span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" th:if="${usuarioId == null}">
+                        <a class="nav-link" th:href="@{/login}">Iniciar sesión</a>
+                    </li>
+                    <li class="nav-item" th:if="${usuarioId != null}">
+                        <a class="nav-link usuario-nombre" th:href="@{/perfil}" th:text="${usuarioNombre}" aria-label="Ir al perfil de usuario"></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 </div>

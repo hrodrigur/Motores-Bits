@@ -1,44 +1,149 @@
-/* index.css - página principal: fondo blanco, texto negro, acentos naranja */
+/* ==============================
+   Paleta general
+   ============================== */
 :root{
-  --page-bg: #ffffff; /* fondo blanco */
-  --text-color: #0b0b0b; /* negro para texto */
-  --accent: #ff6a00; /* naranja */
-  --card-bg: #f7f9fb; /* tarjeta sutil */
+    --page-bg: #ffffff;
+    --text-color: #0b0b0b;
+    --accent: #ff6a00;
+    --card-bg: #f7f9fb;
 }
 
 body{
-  background: var(--page-bg);
-  color: var(--text-color);
+    background: var(--page-bg);
+    color: var(--text-color);
+    padding-bottom: 70px; /* que el footer no tape nada */
 }
 
-/* Cabecera de la página */
+/* ==============================
+   HERO (cabecera grande)
+   ============================== */
 .hero{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background: linear-gradient(90deg, rgba(255,106,0,0.06), rgba(0,0,0,0.01));
-  padding: 28px;
-  border-radius: 8px;
-  margin-bottom: 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background: linear-gradient(90deg, rgba(255,106,0,0.10), rgba(0,0,0,0.02));
+    padding: 32px;
+    border-radius: 18px;
+    margin: 24px auto 32px auto;
+    max-width: 1200px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
 }
 
-.hero .title{ color: var(--text-color); font-size:1.8rem; font-weight:700; }
-.hero .subtitle{ color: #4b5563; }
-
-.categories .card, .products .card{
-  min-height: 120px;
+.hero .title{
+    color: var(--text-color);
+    font-size:2.1rem;
+    font-weight:800;
 }
 
-.products .card .card-body .card-title{ font-size:1rem; font-weight:600; }
+.hero .subtitle{
+    color: #4b5563;
+    max-width: 480px;
+}
 
-.price{ color: var(--accent); font-weight:800; }
+.hero-img img{
+    max-width:260px;
+    border-radius:12px;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.45));
+}
 
-.card{ background: var(--card-bg); border: 1px solid rgba(11,11,11,0.04); }
+/* ==============================
+   Secciones (Categorías / Productos)
+   ============================== */
 
-.btn-primary{ background: var(--accent); border: none; color: #fff; }
-.btn-outline-primary{ color: var(--accent); border-color: rgba(11,11,11,0.06); }
+.container h2{
+    font-weight:800;
+    font-size:2.1rem;
+    margin-top: 32px;
+    margin-bottom:18px;
+}
 
-/* Grid responsive */
+/* separador suave bajo los títulos */
+.container h2::after{
+    content:"";
+    display:block;
+    width:70px;
+    height:3px;
+    margin-top:8px;
+    border-radius:999px;
+    background: var(--accent);
+}
+
+/* espacio entre filas */
+.categories{
+    margin-bottom: 12px;
+}
+.products{
+    margin-bottom: 40px;
+}
+
+/* Tarjetas */
+.categories .card,
+.products .card{
+    min-height: 120px;
+    background: var(--card-bg);
+    border-radius:16px;
+    border: 1px solid rgba(11,11,11,0.04);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.categories .card:hover,
+.products .card:hover{
+    transform: translateY(-4px);
+    box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+    border-color: rgba(255,106,0,0.35);
+}
+
+.products .card .card-body .card-title{
+    font-size:1.05rem;
+    font-weight:700;
+}
+
+/* Precio */
+.price{
+    color: var(--accent);
+    font-weight:800;
+    margin-bottom:10px;
+}
+
+/* ==============================
+   Botones
+   ============================== */
+.btn-primary{
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    border-radius: 999px;
+    padding-inline: 18px;
+}
+
+.btn-outline-primary{
+    color: var(--accent);
+    border-color: rgba(11,11,11,0.06);
+    border-radius: 999px;
+}
+
+.btn-outline-primary:hover{
+    background: var(--accent);
+    color:#fff;
+}
+
+/* ==============================
+   Responsive
+   ============================== */
 @media (max-width:768px){
-  .hero{ flex-direction:column; gap:12px; }
+    .hero{
+        flex-direction:column;
+        gap:16px;
+        text-align:center;
+        padding: 20px;
+    }
+
+    .hero .subtitle{
+        max-width:none;
+    }
+
+    .hero-img{
+        margin-top:8px;
+    }
 }

@@ -19,11 +19,11 @@
     <form th:action="@{/admin/categorias/crear}" method="post" class="mb-3 row g-2 align-items-end">
       <div class="col-md-4">
         <label for="nombre" class="form-label">Nombre</label>
-        <input id="nombre" type="text" name="nombre" placeholder="Nombre" class="form-control" required />
+        <input id="nombre" type="text" name="nombre" placeholder="Nombre" class="form-control" maxlength="30" required />
       </div>
       <div class="col-md-6">
         <label for="descripcion" class="form-label">Descripción</label>
-        <input id="descripcion" type="text" name="descripcion" placeholder="Descripción" class="form-control" />
+        <input id="descripcion" type="text" name="descripcion" placeholder="Descripción" class="form-control" maxlength="100" />
       </div>
       <div class="col-md-2">
         <button class="btn btn-primary">Crear</button>
@@ -48,11 +48,11 @@
               <div class="row g-2 align-items-end">
                 <div class="col-md-4">
                   <label th:for="${'nombre-c-' + c.id}" class="form-label visually-hidden">Nombre</label>
-                  <input th:id="${'nombre-c-' + c.id}" type="text" name="nombre" th:value="${c.nombre}" class="form-control" required />
+                  <input th:id="${'nombre-c-' + c.id}" type="text" name="nombre" th:value="${c.nombre}" class="form-control" maxlength="30" required />
                 </div>
                 <div class="col-md-6">
                   <label th:for="${'desc-c-' + c.id}" class="form-label visually-hidden">Descripción</label>
-                  <input th:id="${'desc-c-' + c.id}" type="text" name="descripcion" th:value="${c.descripcion}" class="form-control" />
+                  <input th:id="${'desc-c-' + c.id}" type="text" name="descripcion" th:value="${c.descripcion}" class="form-control" maxlength="100" />
                 </div>
                 <div class="col-md-2">
                   <button class="btn btn-sm btn-success">Guardar</button>

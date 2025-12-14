@@ -13,7 +13,10 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 th:text="'Pedido #' + ${pedido.id}"></h2>
-        <a href="/perfil" class="btn btn-secondary">Volver</a>
+        <div>
+            <a th:href="@{/pedidos/{id}/factura(id=${pedido.id})}" class="btn btn-success me-2" target="_blank" rel="noopener noreferrer">Descargar factura</a>
+            <a href="/perfil" class="btn btn-secondary">Volver</a>
+        </div>
     </div>
 
     <p><strong>Estado:</strong> <span th:text="${pedido.estado}"></span></p>

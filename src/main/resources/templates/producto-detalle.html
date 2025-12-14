@@ -55,8 +55,9 @@
 
                             <div class="input-group" style="max-width:140px;">
                                 <label for="cantidad-input" class="visually-hidden">Cantidad</label>
+                                <!-- max = min(producto.stock, 100) -->
                                 <input id="cantidad-input" type="number" name="cantidad" class="form-control" value="1" min="1"
-                                       th:attr="max=${producto.stock}" required />
+                                       th:attr="max=${producto.stock != null ? (producto.stock > 100 ? 100 : producto.stock) : 0}" required />
                             </div>
 
                             <!-- Deshabilitar si no hay stock O si es ADMIN -->
@@ -66,6 +67,8 @@
                                 Añadir al carrito
                             </button>
                         </form>
+
+                        <div th:if="${cartMsg != null}" class="mt-2 alert alert-info" th:text="${cartMsg}"></div>
 
                         <div th:if="${producto.stock == 0}" class="mt-2 alert alert-warning">Agotado</div>
                     </div>

@@ -50,6 +50,14 @@ public class PedidoController {
                     .map(d -> d.getPrecio().multiply(java.math.BigDecimal.valueOf(d.getCantidad())))
                     .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
             model.addAttribute("pedido", temp);
+
+            // mostrar mensaje en caso de ajuste por stock
+            Object cartMsg = session.getAttribute("cartMsg");
+            if (cartMsg != null) {
+                model.addAttribute("cartMsg", cartMsg);
+                session.removeAttribute("cartMsg");
+            }
+
             return "carrito";
         }
 
@@ -73,7 +81,26 @@ public class PedidoController {
         @SuppressWarnings("unchecked")
         Map<Long,Integer> cart = (Map<Long,Integer>) session.getAttribute("cartItems");
         if (cart == null) { cart = new HashMap<>(); }
-        cart.put(idProducto, cart.getOrDefault(idProducto, 0) + cantidad);
+
+        // Obtener producto y stock actual
+        Producto prod = catalogoService.obtenerProducto(idProducto);
+        int available = prod.getStock() == null ? 0 : prod.getStock();
+
+        // Limitar petición a 100 como máximo y a stock disponible
+        if (cantidad > 100) cantidad = 100;
+
+        int current = cart.getOrDefault(idProducto, 0);
+        int requestedTotal = current + cantidad;
+        if (requestedTotal > 100) {
+            requestedTotal = 100;
+        }
+        if (requestedTotal > available) {
+            // Ajustar a stock disponible
+            requestedTotal = available;
+            session.setAttribute("cartMsg", "La cantidad solicitada se ha ajustado al stock disponible: " + available);
+        }
+
+        cart.put(idProducto, requestedTotal);
         session.setAttribute("cartItems", cart);
 
         // actualizar cantidad total
@@ -91,7 +118,21 @@ public class PedidoController {
         @SuppressWarnings("unchecked")
         Map<Long,Integer> cart = (Map<Long,Integer>) session.getAttribute("cartItems");
         if (cart == null) { cart = new HashMap<>(); }
-        cart.put(idProducto, cart.getOrDefault(idProducto, 0) + cantidad);
+
+        Producto prod = catalogoService.obtenerProducto(idProducto);
+        int available = prod.getStock() == null ? 0 : prod.getStock();
+
+        if (cantidad > 100) cantidad = 100;
+
+        int current = cart.getOrDefault(idProducto, 0);
+        int requestedTotal = current + cantidad;
+        if (requestedTotal > 100) requestedTotal = 100;
+        if (requestedTotal > available) {
+            requestedTotal = available;
+            session.setAttribute("cartMsg", "La cantidad solicitada se ha ajustado al stock disponible: " + available);
+        }
+
+        cart.put(idProducto, requestedTotal);
         session.setAttribute("cartItems", cart);
 
         int totalItems = cart.values().stream().mapToInt(Integer::intValue).sum();

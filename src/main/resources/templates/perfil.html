@@ -14,7 +14,7 @@
 
     <h1>Perfil</h1>
 
-    <div th:if="${saved}" class="alert alert-success">Perfil actualizado correctamente.</div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
     <!-- Información general -->
     <div class="card mb-3">
@@ -35,17 +35,18 @@
                 <span th:unless="${usuario.telefono != null and usuario.telefono != ''}">No especificado</span>
             </p>
 
-            <!-- Botones editar / logout -->
-            <button class="btn btn-secondary" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#editProfile">
-                Editar perfil
-            </button>
-
-            <form th:action="@{/logout}" method="post" class="d-inline">
-                <button type="submit" class="btn btn-danger ms-2">Cerrar sesión</button>
-            </form>
         </div>
     </div>
+
+    <!-- Botones editar / logout -->
+    <button class="btn btn-secondary" type="button" data-bs-toggle="collapse"
+            data-bs-target="#editProfile">
+        Editar perfil
+    </button>
+
+    <form th:action="@{/logout}" method="post" class="d-inline">
+        <button type="submit" class="btn btn-danger ms-2">Cerrar sesión</button>
+    </form>
 
     <!-- Formulario edición -->
     <div id="editProfile" class="collapse">

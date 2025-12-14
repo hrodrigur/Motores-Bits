@@ -59,8 +59,16 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional(readOnly = true)
     public Pedido obtenerPedido(Long idPedido) {
         // usamos la query que trae líneas y productos
-        return pedidoRepository.findConLineasYProductos(idPedido)
+        Pedido pedido = pedidoRepository.findConLineasYProductos(idPedido)
                 .orElseThrow(() -> new PedidoNoEncontradoException(idPedido));
+
+        // Inicializar usuario (evitar LazyInitializationException al renderizar la plantilla fuera de la transacción)
+        if (pedido.getUsuario() != null) {
+            // acceder a un getter dentro de la transacción fuerza la inicialización del proxy
+            pedido.getUsuario().getNombre();
+        }
+
+        return pedido;
     }
 
     @Override

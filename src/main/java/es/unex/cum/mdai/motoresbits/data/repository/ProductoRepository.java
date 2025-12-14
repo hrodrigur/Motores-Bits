@@ -13,6 +13,9 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     // Devuelve true si existe al menos un producto con la categoría dada
     boolean existsByCategoriaId(Long categoriaId);
 
+    // Comprueba si existe un producto con la referencia dada
+    boolean existsByReferencia(String referencia);
+
     // Decrementa el stock de forma atómica si hay stock suficiente; devuelve filas afectadas (1 o 0)
     @Modifying(clearAutomatically = true)
     @Query("update Producto p set p.stock = p.stock - :cantidad where p.id = :id and p.stock >= :cantidad")

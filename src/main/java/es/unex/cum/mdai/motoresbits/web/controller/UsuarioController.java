@@ -49,6 +49,7 @@ public class UsuarioController {
         if (saved != null) {
             model.addAttribute("saved", true);
         }
+
         return "perfil";
     }
 
@@ -189,6 +190,4 @@ public class UsuarioController {
             return "perfil";
         }
     }
-
-
 }

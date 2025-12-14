@@ -3,11 +3,11 @@ package es.unex.cum.mdai.motoresbits.service.impl;
 import es.unex.cum.mdai.motoresbits.data.model.entity.Usuario;
 import es.unex.cum.mdai.motoresbits.data.model.enums.RolUsuario;
 import es.unex.cum.mdai.motoresbits.data.repository.PedidoRepository;
+import es.unex.cum.mdai.motoresbits.data.repository.ResenaRepository;
 import es.unex.cum.mdai.motoresbits.data.repository.UsuarioRepository;
 import es.unex.cum.mdai.motoresbits.service.UsuarioService;
 import es.unex.cum.mdai.motoresbits.service.exception.CredencialesInvalidasException;
 import es.unex.cum.mdai.motoresbits.service.exception.EmailYaRegistradoException;
-import es.unex.cum.mdai.motoresbits.service.exception.UsuarioConPedidosException;
 import es.unex.cum.mdai.motoresbits.service.exception.UsuarioNoEncontradoException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +21,14 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PedidoRepository pedidoRepository;
+    private final ResenaRepository resenaRepository;
 
     public UsuarioServiceImpl(UsuarioRepository usuarioRepository,
-                              PedidoRepository pedidoRepository) {
+                              PedidoRepository pedidoRepository,
+                              ResenaRepository resenaRepository) {
         this.usuarioRepository = usuarioRepository;
         this.pedidoRepository = pedidoRepository;
+        this.resenaRepository = resenaRepository;
     }
 
     @Override
@@ -100,12 +103,23 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario u = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNoEncontradoException(id));
 
-        // Regla de negocio: no eliminar si tiene pedidos
-        boolean tienePedidos = pedidoRepository.existsByUsuarioId(id);
-        if (tienePedidos) {
-            throw new UsuarioConPedidosException(id);
+        // Primero eliminamos reseñas hechas por el usuario
+        try {
+            var resenas = resenaRepository.findByUsuarioId(id);
+            if (resenas != null && !resenas.isEmpty()) {
+                resenaRepository.deleteAll(resenas);
+            }
+        } catch (Exception ignore) {
+            // En algunos contextos resenaRepository puede no estar inyectado aún; fallback a no-op
         }
 
+        // Luego eliminamos los pedidos del usuario (y sus líneas por cascade)
+        var pedidos = pedidoRepository.findByUsuarioId(id);
+        if (pedidos != null && !pedidos.isEmpty()) {
+            pedidoRepository.deleteAll(pedidos);
+        }
+
+        // Por último eliminamos el usuario
         usuarioRepository.delete(u);
     }
 

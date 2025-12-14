@@ -2,6 +2,8 @@ package es.unex.cum.mdai.motoresbits.data.model.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
@@ -25,15 +27,18 @@ public class Producto implements Serializable {
     private Categoria categoria;
 
     @Column(nullable = false)
+    @Size(max = 30)
     private String nombre;
 
     @Column(nullable = false, unique = true)
+    @Size(max = 15)
     private String referencia;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
     @Min(0)
+    @Max(100)
     @Column(nullable = false)
     private Integer stock = 0;
 

@@ -5,12 +5,15 @@ import es.unex.cum.mdai.motoresbits.service.PedidoService;
 import es.unex.cum.mdai.motoresbits.service.ResenaService;
 import es.unex.cum.mdai.motoresbits.service.UsuarioService;
 import es.unex.cum.mdai.motoresbits.service.exception.EstadoPedidoInvalidoException;
+import es.unex.cum.mdai.motoresbits.service.exception.ReferenciaProductoDuplicadaException;
+import es.unex.cum.mdai.motoresbits.service.exception.DatosProductoInvalidosException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
+import es.unex.cum.mdai.motoresbits.data.model.enums.RolUsuario;
 
 @Controller
 @RequestMapping("/admin")
@@ -42,17 +45,29 @@ public class AdminController {
     }
 
     @PostMapping("/categorias/crear")
-    public String crearCategoria(HttpSession session, @RequestParam String nombre, @RequestParam String descripcion) {
+    public String crearCategoria(HttpSession session, @RequestParam String nombre, @RequestParam String descripcion, Model model) {
         if (isNotAdmin(session)) return "redirect:/login";
-        catalogoService.crearCategoria(nombre, descripcion);
-        return "redirect:/admin/categorias";
+        try {
+            catalogoService.crearCategoria(nombre, descripcion);
+            return "redirect:/admin/categorias";
+        } catch (DatosProductoInvalidosException ex) {
+            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("categorias", catalogoService.listarCategorias());
+            return "admin/categorias";
+        }
     }
 
     @PostMapping("/categorias/editar")
-    public String editarCategoria(HttpSession session, @RequestParam Long id, @RequestParam String nombre, @RequestParam String descripcion) {
+    public String editarCategoria(HttpSession session, @RequestParam Long id, @RequestParam String nombre, @RequestParam String descripcion, Model model) {
         if (isNotAdmin(session)) return "redirect:/login";
-        catalogoService.editarCategoria(id, nombre, descripcion);
-        return "redirect:/admin/categorias";
+        try {
+            catalogoService.editarCategoria(id, nombre, descripcion);
+            return "redirect:/admin/categorias";
+        } catch (DatosProductoInvalidosException ex) {
+            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("categorias", catalogoService.listarCategorias());
+            return "admin/categorias";
+        }
     }
 
     @PostMapping("/categorias/eliminar")
@@ -80,23 +95,44 @@ public class AdminController {
             model.addAttribute("selectedCategoriaId", null);
         }
         model.addAttribute("categorias", catalogoService.listarCategorias());
+
+        // Mostrar error si fue guardado en session por un redirect desde editar
+        Object adminError = session.getAttribute("adminError");
+        if (adminError != null) {
+            model.addAttribute("error", adminError.toString());
+            session.removeAttribute("adminError");
+        }
         return "admin/productos";
     }
 
     @PostMapping("/productos/crear")
     public String crearProducto(HttpSession session, @RequestParam Long idCategoria, @RequestParam String nombre,
-                                @RequestParam String referencia, @RequestParam BigDecimal precio, @RequestParam Integer stock) {
+                                @RequestParam String referencia, @RequestParam BigDecimal precio, @RequestParam Integer stock,
+                                Model model) {
         if (isNotAdmin(session)) return "redirect:/login";
-        catalogoService.crearProducto(idCategoria, nombre, referencia, precio, stock);
-        return "redirect:/admin/productos";
+        try {
+            catalogoService.crearProducto(idCategoria, nombre, referencia, precio, stock);
+            return "redirect:/admin/productos";
+        } catch (ReferenciaProductoDuplicadaException | DatosProductoInvalidosException ex) {
+            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("categorias", catalogoService.listarCategorias());
+            model.addAttribute("productos", catalogoService.listarProductosConCategoria());
+            return "admin/productos";
+        }
     }
 
     @PostMapping("/productos/editar")
     public String editarProducto(HttpSession session, @RequestParam Long id, @RequestParam Long idCategoria, @RequestParam String nombre,
                                  @RequestParam BigDecimal precio, @RequestParam Integer stock) {
         if (isNotAdmin(session)) return "redirect:/login";
-        catalogoService.editarProducto(id, idCategoria, nombre, precio, stock);
-        return "redirect:/admin/productos";
+        try {
+            catalogoService.editarProducto(id, idCategoria, nombre, precio, stock);
+            return "redirect:/admin/productos";
+        } catch (DatosProductoInvalidosException ex) {
+            // Guardamos el mensaje en session y redirigimos para que se muestre en listarProductos
+            session.setAttribute("adminError", ex.getMessage());
+            return "redirect:/admin/productos";
+        }
     }
 
     @PostMapping("/productos/eliminar")
@@ -175,7 +211,7 @@ public class AdminController {
         // Cargamos las colecciones con sus servicios, NO desde usuario.pedidos
         var pedidosUsuario = pedidoService.listarPedidosUsuario(id);
 
-        var resenasUsuario = resenaService.obtenerResena(id); // o el que tengas
+        var resenasUsuario = resenaService.listarResenasUsuario(id);
 
         model.addAttribute("usuario", usuario);
         model.addAttribute("pedidosUsuario", pedidosUsuario);
@@ -200,4 +236,34 @@ public class AdminController {
             return "admin/pedidos";
         }
     }
-}
+
+    // ---------- USUARIOS (ADMIN) ----------
+    @GetMapping("/usuarios")
+    public String listarUsuarios(HttpSession session, Model model) {
+        if (isNotAdmin(session)) return "redirect:/login";
+        model.addAttribute("usuarios", usuarioService.listarTodos());
+        return "admin/usuarios";
+    }
+
+    @PostMapping("/usuarios/eliminar")
+    public String eliminarUsuarioAdmin(HttpSession session, @RequestParam Long id, Model model) {
+        if (isNotAdmin(session)) return "redirect:/login";
+        try {
+            var usuario = usuarioService.getById(id);
+            // No permitir borrar usuarios con rol ADMIN
+            if (usuario.getRol() == RolUsuario.ADMIN) {
+                model.addAttribute("error", "No está permitido eliminar usuarios con rol ADMIN.");
+                model.addAttribute("usuarios", usuarioService.listarTodos());
+                return "admin/usuarios";
+            }
+
+            usuarioService.eliminarUsuario(id);
+            return "redirect:/admin/usuarios";
+        } catch (Exception ex) {
+            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("usuarios", usuarioService.listarTodos());
+            return "admin/usuarios";
+        }
+    }
+
+ }

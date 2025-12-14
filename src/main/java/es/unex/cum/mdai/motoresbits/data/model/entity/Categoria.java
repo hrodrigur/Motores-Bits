@@ -1,6 +1,7 @@
 package es.unex.cum.mdai.motoresbits.data.model.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import java.util.*;
 
 @Entity
@@ -12,9 +13,11 @@ public class Categoria {
     @Column(name = "id_categoria")
     private Long id;
 
+    @Size(max = 30)
     private String nombre;
 
     @Column(columnDefinition = "TEXT")
+    @Size(max = 100)
     private String descripcion;
 
     @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, orphanRemoval = true)

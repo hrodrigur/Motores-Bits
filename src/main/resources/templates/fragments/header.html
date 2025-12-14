@@ -8,20 +8,21 @@
                 <span class="logo-mark" aria-hidden="true"></span>
                 Motores & Bits
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="#navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
 
-                <!-- ⬇️ Aquí el cambio importante: ms-auto -->
+                <!-- ⬇️ Menú de navegación -->
                 <ul class="navbar-nav ms-auto align-items-center">
+
                     <!-- Enlace admin visible solo para rol ADMIN (panel principal) -->
                     <li class="nav-item" th:if="${usuarioRol == 'ADMIN'}">
                         <a class="nav-link" th:href="@{/admin}">Admin</a>
                     </li>
 
-                    <!-- Mostrar Carrito solo si NO es admin; el acceso se protegerá en el controlador -->
+                    <!-- Mostrar Carrito solo si NO es admin -->
                     <li class="nav-item" th:if="${usuarioRol != 'ADMIN'}">
                         <a class="nav-link position-relative" th:href="@{/carrito}" aria-label="Ver carrito">
                             Carrito

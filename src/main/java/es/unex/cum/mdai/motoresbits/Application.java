@@ -2,11 +2,19 @@ package es.unex.cum.mdai.motoresbits;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.core.io.support.EncodedResource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
 
 @SpringBootApplication
 public class Application {
@@ -67,6 +75,80 @@ public class Application {
             // Aseguramos que Hibernate use un dialecto H2 si hace falta
             System.setProperty("spring.jpa.database-platform", "org.hibernate.dialect.H2Dialect");
             System.setProperty("spring.jpa.hibernate.ddl-auto", "update");
+        }
+
+        // Ejecutar script de esquema si falta la tabla 'categorias' (antes de arrancar JPA/Hibernate)
+        try {
+            // usamos la URL ya calculada anteriormente (configuredUrl)
+            String url = configuredUrl;
+            // intentamos obtener credenciales de system properties / env vars
+            String user = System.getProperty("spring.datasource.username", System.getenv("SPRING_DATASOURCE_USERNAME"));
+            String pass = System.getProperty("spring.datasource.password", System.getenv("SPRING_DATASOURCE_PASSWORD"));
+
+            // si no están en system props/env vars, leemos application.properties desde classpath
+            if ((user == null || user.isEmpty()) || (pass == null)) {
+                try (java.io.InputStream in = Application.class.getResourceAsStream("/application.properties")) {
+                    if (in != null) {
+                        java.util.Properties props = new java.util.Properties();
+                        props.load(in);
+                        if (user == null || user.isEmpty()) user = props.getProperty("spring.datasource.username", user);
+                        if (pass == null) pass = props.getProperty("spring.datasource.password", pass);
+                    }
+                } catch (Exception ignore) {
+                    // no crítico: seguimos con lo que tengamos
+                }
+            }
+
+            if (url != null && !url.isEmpty()) {
+                // Cargamos el driver si se especificó
+                String driver = System.getProperty("spring.datasource.driver-class-name");
+                // si no está, intentar leer de application.properties
+                if (driver == null || driver.isEmpty()) {
+                    try (java.io.InputStream in = Application.class.getResourceAsStream("/application.properties")) {
+                        if (in != null) {
+                            java.util.Properties props = new java.util.Properties();
+                            props.load(in);
+                            driver = props.getProperty("spring.datasource.driver-class-name", driver);
+                        }
+                    } catch (Exception ignore) {
+                    }
+                }
+                if (driver != null && !driver.isEmpty()) {
+                    try {
+                        Class.forName(driver);
+                    } catch (ClassNotFoundException e) {
+                        LOGGER.debug("Driver JDBC no encontrado en classpath: {}", driver);
+                    }
+                }
+
+                try (Connection conn = DriverManager.getConnection(url, user, pass)) {
+                    DatabaseMetaData meta = conn.getMetaData();
+                    boolean categoriasExists = false;
+                    // probamos varias variantes de nombre (mayúsculas/minúsculas)
+                    try (ResultSet rs = meta.getTables(null, null, "categorias", new String[]{"TABLE"})) {
+                        if (rs.next()) categoriasExists = true;
+                    }
+                    if (!categoriasExists) {
+                        try (ResultSet rs2 = meta.getTables(null, null, "CATEGORIAS", new String[]{"TABLE"})) {
+                            if (rs2.next()) categoriasExists = true;
+                        }
+                    }
+
+                    if (!categoriasExists) {
+                        LOGGER.info("Tabla 'categorias' no encontrada en la BD. Ejecutando script de esquema desde classpath: sql/schema.sql");
+                        Resource r = new ClassPathResource("sql/schema.sql");
+                        EncodedResource er = new EncodedResource(r);
+                        ScriptUtils.executeSqlScript(conn, er);
+                        LOGGER.info("Script de esquema ejecutado correctamente (pre-inicialización).");
+                    } else {
+                        LOGGER.info("Tabla 'categorias' ya existe. No se ejecuta script de esquema.");
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("No se pudo comprobar/ejecutar el script de esquema antes de arrancar Spring: {}", e.toString());
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Error al intentar ejecutar script inicial previo: {}", e.toString());
         }
 
         // Arrancamos la aplicación Spring

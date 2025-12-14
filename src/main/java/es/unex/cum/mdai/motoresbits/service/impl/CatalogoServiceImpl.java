@@ -37,6 +37,13 @@ public class CatalogoServiceImpl implements CatalogoService {
 
     @Override
     public Categoria crearCategoria(String nombre, String descripcion) {
+        // Validaciones: nombre obligatorio, max 30; descripcion max 100
+        if (nombre == null || nombre.isBlank() || nombre.length() > 30) {
+            throw new DatosProductoInvalidosException("El nombre de la categoría debe tener entre 1 y 30 caracteres");
+        }
+        if (descripcion != null && descripcion.length() > 100) {
+            throw new DatosProductoInvalidosException("La descripción de la categoría no puede exceder 100 caracteres");
+        }
         Categoria c = new Categoria();
         c.setNombre(nombre);
         c.setDescripcion(descripcion);
@@ -46,6 +53,13 @@ public class CatalogoServiceImpl implements CatalogoService {
     @Override
     public Categoria editarCategoria(Long id, String nombre, String descripcion) {
         Categoria c = obtenerCategoria(id);
+        // Validaciones en edición también
+        if (nombre == null || nombre.isBlank() || nombre.length() > 30) {
+            throw new DatosProductoInvalidosException("El nombre de la categoría debe tener entre 1 y 30 caracteres");
+        }
+        if (descripcion != null && descripcion.length() > 100) {
+            throw new DatosProductoInvalidosException("La descripción de la categoría no puede exceder 100 caracteres");
+        }
         c.setNombre(nombre);
         c.setDescripcion(descripcion);
         return categoriaRepository.save(c);
@@ -83,11 +97,41 @@ public class CatalogoServiceImpl implements CatalogoService {
         categoriaRepository.delete(categoria);
     }
 
+    // Helper: clamp stock entre 0 y 100
+    private Integer clampStock(Integer stock) {
+        if (stock == null) return 0;
+        if (stock < 0) return 0;
+        if (stock > 100) return 100;
+        return stock;
+    }
+
     // ------------------ PRODUCTOS ------------------
 
     @Override
     public Producto crearProducto(Long idCategoria, String nombre, String referencia,
                                   BigDecimal precio, Integer stock) {
+
+        // Validar referencia única
+        if (productoRepository.existsByReferencia(referencia)) {
+            throw new ReferenciaProductoDuplicadaException(referencia);
+        }
+
+        // Validaciones de nombre y precio
+        if (nombre == null || nombre.isEmpty() || nombre.length() > 30) {
+            throw new DatosProductoInvalidosException("El nombre debe tener entre 1 y 30 caracteres");
+        }
+        // Validar referencia
+        if (referencia == null || referencia.isBlank() || referencia.length() > 15) {
+            throw new DatosProductoInvalidosException("La referencia es obligatoria y debe tener como máximo 15 caracteres");
+        }
+        if (precio == null || precio.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new DatosProductoInvalidosException("El precio debe ser mayor que 0");
+        }
+        // máximo 9 dígitos en la parte entera: precio < 1,000,000,000
+        java.math.BigDecimal limite = new java.math.BigDecimal("1000000000");
+        if (precio.compareTo(limite) >= 0) {
+            throw new DatosProductoInvalidosException("El precio entero no puede tener más de 9 dígitos");
+        }
 
         Categoria categoria = obtenerCategoria(idCategoria);
 
@@ -96,7 +140,7 @@ public class CatalogoServiceImpl implements CatalogoService {
         p.setNombre(nombre);
         p.setReferencia(referencia);
         p.setPrecio(precio);
-        p.setStock(stock);
+        p.setStock(clampStock(stock));
 
         return productoRepository.save(p);
     }
@@ -108,9 +152,21 @@ public class CatalogoServiceImpl implements CatalogoService {
         Producto p = obtenerProducto(id);
         Categoria cat = obtenerCategoria(idCategoria);
 
+        // Validaciones de nombre y precio en edición también
+        if (nombre == null || nombre.isEmpty() || nombre.length() > 30) {
+            throw new DatosProductoInvalidosException("El nombre debe tener entre 1 y 30 caracteres");
+        }
+        if (precio == null || precio.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new DatosProductoInvalidosException("El precio debe ser mayor que 0");
+        }
+        java.math.BigDecimal limite = new java.math.BigDecimal("1000000000");
+        if (precio.compareTo(limite) >= 0) {
+            throw new DatosProductoInvalidosException("El precio entero no puede tener más de 9 dígitos");
+        }
+
         p.setNombre(nombre);
         p.setPrecio(precio);
-        p.setStock(stock);
+        p.setStock(clampStock(stock));
         p.setCategoria(cat);
 
         return productoRepository.save(p);

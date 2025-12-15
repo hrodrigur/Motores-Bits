@@ -35,10 +35,11 @@
                             <span th:text="${usuarioNombre}">Usuario</span>
                             <!-- ✅ Saldo al lado del nombre -->
                             <span class="ms-2"
-                                  th:if="${usuarioSaldo != null and usuarioRol != 'ADMIN'}"
-                                  th:text="|Saldo: ${#numbers.formatDecimal(session.usuarioSaldo, 1, 2)} €|">
-                                  (0.00 €)
+                                  th:if="${session.usuarioSaldo != null and session.usuarioRol != 'ADMIN'}"
+                                  th:text="'Saldo: ' + ${#numbers.formatDecimal(session.usuarioSaldo, 1, 2)} + ' €'">
+                                  Saldo: 0,00 €
                             </span>
+
                         </a>
                     </li>
 

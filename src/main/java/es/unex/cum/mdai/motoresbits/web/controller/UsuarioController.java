@@ -1,17 +1,17 @@
 package es.unex.cum.mdai.motoresbits.web.controller;
 
+import es.unex.cum.mdai.motoresbits.data.model.entity.Usuario;
 import es.unex.cum.mdai.motoresbits.service.PedidoService;
 import es.unex.cum.mdai.motoresbits.service.UsuarioService;
 import es.unex.cum.mdai.motoresbits.service.ResenaService;
 import es.unex.cum.mdai.motoresbits.data.model.enums.EstadoPedido;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
+
+import java.math.BigDecimal;
 
 @Controller
 public class UsuarioController {
@@ -28,6 +28,17 @@ public class UsuarioController {
         this.resenaService = resenaService;
     }
 
+    // -------------------------
+    // Helpers
+    // -------------------------
+    private boolean isAdmin(HttpSession session) {
+        String rol = (String) session.getAttribute("usuarioRol");
+        return rol != null && rol.equals("ADMIN");
+    }
+
+    // -------------------------
+    // PERFIL
+    // -------------------------
     @GetMapping("/perfil")
     public String perfil(HttpSession session,
                          Model model,
@@ -35,20 +46,14 @@ public class UsuarioController {
                          @RequestParam(required = false) String saved) {
 
         Long usuarioId = (Long) session.getAttribute("usuarioId");
-        if (usuarioId == null) {
-            return "redirect:/login";
-        }
+        if (usuarioId == null) return "redirect:/login";
 
         model.addAttribute("usuario", usuarioService.getById(usuarioId));
         model.addAttribute("pedidos", pedidoService.listarPedidosUsuario(usuarioId));
         model.addAttribute("resenas", resenaService.listarResenasUsuario(usuarioId));
 
-        if (Boolean.TRUE.equals(firstTime)) {
-            model.addAttribute("firstTime", true);
-        }
-        if (saved != null) {
-            model.addAttribute("saved", true);
-        }
+        if (Boolean.TRUE.equals(firstTime)) model.addAttribute("firstTime", true);
+        if (saved != null) model.addAttribute("saved", true);
 
         return "perfil";
     }
@@ -60,31 +65,62 @@ public class UsuarioController {
                                    Model model) {
 
         Long usuarioId = (Long) session.getAttribute("usuarioId");
-        if (usuarioId == null) {
-            return "redirect:/login";
-        }
+        if (usuarioId == null) return "redirect:/login";
 
-        // Validación del teléfono: debe tener exactamente 9 dígitos
         if (telefono != null && !telefono.matches("\\d{9}")) {
             model.addAttribute("usuario", usuarioService.getById(usuarioId));
             model.addAttribute("pedidos", pedidoService.listarPedidosUsuario(usuarioId));
-            model.addAttribute("resenas",
-                    resenaService.listarResenasUsuario(usuarioId));
+            model.addAttribute("resenas", resenaService.listarResenasUsuario(usuarioId));
             model.addAttribute("errorTelefono", "El teléfono debe contener exactamente 9 dígitos.");
             return "perfil";
         }
 
         usuarioService.actualizarPerfil(usuarioId, direccion, telefono);
-        // Mantenerse en perfil y mostrar mensaje de guardado
         return "redirect:/perfil?saved=true";
     }
 
+    // -------------------------
+    // SALDO (CLIENTE: solo suma para sí mismo)
+    // -------------------------
+    @GetMapping("/perfil/saldo")
+    public String mostrarFormularioSaldo(HttpSession session, Model model) {
+        Long usuarioId = (Long) session.getAttribute("usuarioId");
+        if (usuarioId == null) return "redirect:/login";
+
+        model.addAttribute("usuario", usuarioService.getById(usuarioId));
+        return "perfil-saldo";
+    }
+
+    @PostMapping("/perfil/saldo")
+    public String anadirSaldo(@RequestParam BigDecimal cantidad,
+                              HttpSession session,
+                              Model model) {
+
+        Long usuarioId = (Long) session.getAttribute("usuarioId");
+        if (usuarioId == null) return "redirect:/login";
+
+        // ✅ Cliente suma saldo a sí mismo (y si es admin, no usar esta ruta)
+        if (isAdmin(session)) return "redirect:/perfil";
+
+        try {
+            Usuario usuario = usuarioService.ajustarSaldo(usuarioId, cantidad); // delta positivo
+            session.setAttribute("usuarioSaldo", usuario.getSaldo());
+            return "redirect:/perfil";
+        } catch (Exception ex) {
+            model.addAttribute("usuario", usuarioService.getById(usuarioId));
+            model.addAttribute("error", ex.getMessage());
+            return "perfil-saldo";
+        }
+    }
+
+    // -------------------------
+    // PEDIDOS
+    // -------------------------
     @GetMapping("/mis-pedidos")
     public String misPedidos(HttpSession session, Model model) {
         Long usuarioId = (Long) session.getAttribute("usuarioId");
-        if (usuarioId == null) {
-            return "redirect:/login";
-        }
+        if (usuarioId == null) return "redirect:/login";
+
         model.addAttribute("pedidos", pedidoService.listarPedidosUsuario(usuarioId));
         return "mis-pedidos";
     }
@@ -94,14 +130,11 @@ public class UsuarioController {
                                          HttpSession session,
                                          Model model) {
         Long usuarioId = (Long) session.getAttribute("usuarioId");
-        if (usuarioId == null) {
-            return "redirect:/login";
-        }
+        if (usuarioId == null) return "redirect:/login";
 
         try {
             var pedido = pedidoService.obtenerPedido(id);
 
-            // Comprobamos que el pedido pertenece al usuario logueado
             if (pedido.getUsuario() == null || !usuarioId.equals(pedido.getUsuario().getId())) {
                 model.addAttribute("error", "No tienes permiso para ver este pedido.");
                 model.addAttribute("usuario", usuarioService.getById(usuarioId));
@@ -127,9 +160,7 @@ public class UsuarioController {
                                        @RequestParam Long idPedido,
                                        Model model) {
         Long usuarioId = (Long) session.getAttribute("usuarioId");
-        if (usuarioId == null) {
-            return "redirect:/login";
-        }
+        if (usuarioId == null) return "redirect:/login";
 
         try {
             var pedido = pedidoService.obtenerPedido(idPedido);
@@ -144,7 +175,6 @@ public class UsuarioController {
                 return "redirect:/perfil?deleted=true";
             }
 
-            // Si llegamos aquí es porque hubo error
             model.addAttribute("usuario", usuarioService.getById(usuarioId));
             model.addAttribute("pedidos", pedidoService.listarPedidosUsuario(usuarioId));
             model.addAttribute("resenas", resenaService.listarResenasUsuario(usuarioId));
@@ -159,14 +189,15 @@ public class UsuarioController {
         }
     }
 
+    // -------------------------
+    // RESEÑAS
+    // -------------------------
     @PostMapping("/perfil/resena/eliminar")
     public String eliminarResenaPerfil(HttpSession session,
                                        @RequestParam Long idResena,
                                        Model model) {
         Long usuarioId = (Long) session.getAttribute("usuarioId");
-        if (usuarioId == null) {
-            return "redirect:/login";
-        }
+        if (usuarioId == null) return "redirect:/login";
 
         try {
             var resena = resenaService.obtenerResena(idResena);
@@ -188,6 +219,58 @@ public class UsuarioController {
             model.addAttribute("pedidos", pedidoService.listarPedidosUsuario(usuarioId));
             model.addAttribute("resenas", resenaService.listarResenasUsuario(usuarioId));
             return "perfil";
+        }
+    }
+
+    // =========================================================
+    // ADMIN: Ajustar saldo a CUALQUIER USUARIO
+    // =========================================================
+
+    @GetMapping("/admin/usuarios/saldo")
+    public String adminUsuariosSaldo(HttpSession session, Model model) {
+        if (!isAdmin(session)) return "redirect:/";
+
+        model.addAttribute("usuarios", usuarioService.listarTodos());
+        return "admin-usuarios-saldo";
+    }
+
+    @GetMapping("/admin/usuarios/{id}/saldo")
+    public String adminFormSaldo(@PathVariable Long id,
+                                 @RequestParam(defaultValue = "add") String op,
+                                 HttpSession session,
+                                 Model model) {
+        if (!isAdmin(session)) return "redirect:/";
+
+        model.addAttribute("usuario", usuarioService.getById(id));
+        model.addAttribute("op", op); // add | sub
+        return "admin-usuario-saldo-form";
+    }
+
+    @PostMapping("/admin/usuarios/{id}/saldo")
+    public String adminAjustarSaldo(@PathVariable Long id,
+                                    @RequestParam BigDecimal cantidad,
+                                    @RequestParam(defaultValue = "add") String op,
+                                    HttpSession session,
+                                    Model model) {
+        if (!isAdmin(session)) return "redirect:/";
+
+        try {
+            BigDecimal delta = op.equals("sub") ? cantidad.negate() : cantidad;
+            Usuario actualizado = usuarioService.ajustarSaldo(id, delta);
+
+            // refrescar header si el admin se ajusta a sí mismo
+            Long sessionUserId = (Long) session.getAttribute("usuarioId");
+            if (sessionUserId != null && sessionUserId.equals(id)) {
+                session.setAttribute("usuarioSaldo", actualizado.getSaldo());
+            }
+
+            return "redirect:/admin/usuarios/saldo";
+
+        } catch (Exception ex) {
+            model.addAttribute("usuario", usuarioService.getById(id));
+            model.addAttribute("op", op);
+            model.addAttribute("error", ex.getMessage());
+            return "admin-usuario-saldo-form";
         }
     }
 }

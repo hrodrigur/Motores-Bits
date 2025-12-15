@@ -42,6 +42,8 @@ public class Producto implements Serializable {
     @Column(nullable = false)
     private Integer stock = 0;
 
+    @Column(name = "imagen", length = 120)
+    private String imagen;
     @Version
     private Integer version;
 
@@ -77,4 +79,7 @@ public class Producto implements Serializable {
 
     public Set<DetallePedido> getDetalles() { return detalles; }
     public void setDetalles(Set<DetallePedido> detalles) { this.detalles = detalles; }
+
+    public String getImagen() { return imagen; }
+    public void setImagen(String imagen) { this.imagen = imagen; }
 }

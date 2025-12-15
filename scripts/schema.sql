@@ -17,7 +17,8 @@ CREATE TABLE usuarios (
   contrasena VARCHAR(255) NOT NULL,
   rol VARCHAR(50),
   direccion VARCHAR(512),
-  telefono VARCHAR(50)
+  telefono VARCHAR(50),
+  saldo DECIMAL(10,2) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB;
 
 -- Categorías
@@ -36,6 +37,7 @@ CREATE TABLE productos (
   precio DECIMAL(10,2) NOT NULL,
   stock INT NOT NULL DEFAULT 0,
   version INT,
+  imagen VARCHAR(120),
   FOREIGN KEY (id_categoria) REFERENCES categorias(id_categoria)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
@@ -86,9 +88,9 @@ CREATE INDEX idx_resena_producto ON resenas(id_producto);
 CREATE INDEX idx_resena_usuario ON resenas(id_usuario);
 
 -- Datos iniciales (ejemplos coherentes con la temática "Motores & Bits")
-INSERT INTO usuarios (id_usuario, nombre, email, contrasena, rol, direccion, telefono) VALUES
-  (1, 'Admin', 'admin@example.com', 'admin', 'ADMIN', 'C/ Administrador 1', '600000000'),
-  (2, 'Cliente Ejemplo', 'cliente@example.com', 'cliente123', 'CLIENTE', 'C/ Cliente 2', '600000001');
+INSERT INTO usuarios (id_usuario, nombre, email, contrasena, rol, direccion, telefono,saldo) VALUES
+  (1, 'Admin', 'admin@example.com', 'admin', 'ADMIN', 'C/ Administrador 1', '600000000', 99999.99),
+  (2, 'Cliente Ejemplo', 'cliente@example.com', 'cliente123', 'CLIENTE', 'C/ Cliente 2', '600000001', 1500.00);
 
 INSERT INTO categorias (id_categoria, nombre, descripcion) VALUES
   (1, 'Motores', 'Piezas y motores de combustion y sus variantes'),
@@ -96,12 +98,12 @@ INSERT INTO categorias (id_categoria, nombre, descripcion) VALUES
   (3, 'Transmision', 'Embragues, cajas de cambio y piezas de transmision'),
   (4, 'Accesorios', 'Filtros, tornilleria y accesorios varios');
 
-INSERT INTO productos (id_producto, id_categoria, nombre, referencia, precio, stock, version) VALUES
-  (1, 1, 'Motor V8 5.0L', 'MV8-001', 4999.99, 5, 1),
-  (2, 2, 'ECU Controlador X100', 'ECU-100', 899.90, 10, 1),
-  (3, 3, 'Kit Embrague Deportivo', 'KEM-200', 149.99, 20, 1),
-  (4, 4, 'Filtro de Aceite Premium', 'FA-300', 19.99, 50, 1),
-  (5, 2, 'Sensor de Oxigeno Bosch', 'SOX-050', 29.50, 30, 1);
+INSERT INTO productos (id_producto, id_categoria, nombre, referencia, precio, stock, version, imagen) VALUES
+(1, 1, 'Motor V8 5.0L', 'MV8-001', 4999.99, 5, 1, 'Motor V8 5.0L.jpg'),
+(2, 2, 'ECU Controlador X100', 'ECU-100', 899.90, 10, 1, 'ECU Controlador X100.jpg'),
+(3, 3, 'Kit Embrague Deportivo', 'KEM-200', 149.99, 20, 1, 'Kit Embrague Deportivo.jpg'),
+(4, 4, 'Filtro de Aceite Premium', 'FA-300', 19.99, 50, 1, 'Filtro de Aceite Premium.jpg'),
+(5, 2, 'Sensor de Oxigeno Bosch', 'SOX-050', 29.50, 30, 1, 'Sensor de Oxigeno Bosch.jpg');
 
 -- Pedido de ejemplo para el cliente (con lineas de pedido)
 INSERT INTO pedidos (id_pedido, id_usuario, fec_pedido, estado, total) VALUES

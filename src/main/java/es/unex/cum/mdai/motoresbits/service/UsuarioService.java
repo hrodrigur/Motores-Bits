@@ -2,6 +2,7 @@ package es.unex.cum.mdai.motoresbits.service;
 
 import es.unex.cum.mdai.motoresbits.data.model.entity.Usuario;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,4 +46,7 @@ public interface UsuarioService {
      * Actualiza campos de perfil basicos del usuario.
      */
     Usuario actualizarPerfil(Long id, String direccion, String telefono);
+
+    Usuario ajustarSaldo(Long idUsuario, BigDecimal delta);
+
 }

@@ -2,6 +2,8 @@ package es.unex.cum.mdai.motoresbits.data.model.entity;
 
 import es.unex.cum.mdai.motoresbits.data.model.enums.RolUsuario;
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.util.*;
 
 @Entity
@@ -20,6 +22,9 @@ public class Usuario {
 
     @Column(nullable = false)
     private String contrasena;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal saldo = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     private RolUsuario rol;
@@ -105,4 +110,8 @@ public class Usuario {
     public void setTelefono(String telefono) {
         this.telefono = telefono;
     }
+
+    public BigDecimal getSaldo() { return saldo; }
+
+    public void setSaldo(BigDecimal saldo) { this.saldo = saldo; }
 }

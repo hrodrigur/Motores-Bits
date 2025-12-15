@@ -24,9 +24,15 @@
     <div class="row">
         <div class="col-md-4">
             <!-- Imagen del producto -->
-            <img th:if="${producto.referencia != null}" th:src="@{/images/{ref}.png(ref=${producto.referencia})}"
-                 alt="Imagen del producto" class="img-fluid rounded" />
-            <img th:if="${producto.referencia == null}" th:src="@{/images/placeholder-product.svg}" alt="Imagen placeholder" class="img-fluid rounded" />
+            <img th:if="${producto.imagen != null and !#strings.isEmpty(producto.imagen)}"
+                 th:src="@{/images/{img}(img=${producto.imagen})}"
+                 alt="Imagen del producto"
+                 class="img-fluid rounded" />
+
+            <img th:unless="${producto.imagen != null and !#strings.isEmpty(producto.imagen)}"
+                 th:src="@{/images/placeholder-product.svg}"
+                 alt="Imagen placeholder"
+                 class="img-fluid rounded" />
         </div>
         <div class="col-md-8">
             <div class="card mb-4">

@@ -38,15 +38,35 @@
         </div>
     </div>
 
-    <!-- Botones editar / logout -->
-    <button class="btn btn-secondary" type="button" data-bs-toggle="collapse"
-            data-bs-target="#editProfile">
-        Editar perfil
-    </button>
+    <!-- Acciones de perfil -->
+    <div class="mt-3 d-flex flex-wrap gap-2">
 
-    <form th:action="@{/logout}" method="post" class="d-inline">
-        <button type="submit" class="btn btn-danger ms-2">Cerrar sesión</button>
-    </form>
+        <button class="btn btn-secondary"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#editProfile">
+            Editar perfil
+        </button>
+
+        <a th:href="@{/perfil/saldo}" class="btn btn-success">
+            Añadir saldo
+        </a>
+
+        <a th:if="${session.usuarioRol == 'ADMIN'}"
+           th:href="@{/admin/usuarios/saldo}"
+           class="btn btn-warning">
+            Gestionar saldos
+        </a>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn btn-danger">
+                Cerrar sesión
+            </button>
+        </form>
+
+    </div>
+
+    <hr class="my-3">
 
     <!-- Formulario edición -->
     <div id="editProfile" class="collapse">

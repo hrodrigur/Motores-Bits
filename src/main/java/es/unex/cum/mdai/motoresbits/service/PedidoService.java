@@ -49,14 +49,18 @@ public interface PedidoService {
     void eliminarPedido(Long idPedido);
 
     /**
-     * Confirma el pedido: verifica stock para cada línea y descuenta la cantidad
-     * correspondiente en los productos. Devuelve el pedido actualizado (estado PENDIENTE).
+     * Confirma el pedido:
+     *  - Verifica stock para cada línea y descuenta stock.
+     *  - Verifica que el usuario tenga saldo suficiente y lo descuenta.
+     *  - Cambia el estado a PENDIENTE.
+     *
      * Si no hay stock suficiente para algún producto, lanza StockInsuficienteException.
+     * Si no hay saldo suficiente, lanza SaldoInsuficienteException.
      */
     Pedido confirmarPedido(Long idPedido);
 
     /**
      * Lista todos los pedidos (para uso de administrador)
      */
-    java.util.List<Pedido> listarTodosPedidos();
+    List<Pedido> listarTodosPedidos();
 }

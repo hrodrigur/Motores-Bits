@@ -12,6 +12,7 @@ import es.unex.cum.mdai.motoresbits.service.exception.UsuarioNoEncontradoExcepti
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -133,4 +134,27 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         return usuarioRepository.save(u);
     }
+
+    @Override
+    @Transactional
+    public Usuario ajustarSaldo(Long idUsuario, BigDecimal delta) {
+
+        if (delta == null || delta.compareTo(BigDecimal.ZERO) == 0) {
+            throw new IllegalArgumentException("La cantidad debe ser distinta de 0");
+        }
+
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        BigDecimal saldoActual = usuario.getSaldo() == null ? BigDecimal.ZERO : usuario.getSaldo();
+        BigDecimal nuevoSaldo = saldoActual.add(delta);
+
+        if (nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("No se puede dejar el saldo en negativo");
+        }
+
+        usuario.setSaldo(nuevoSaldo);
+        return usuarioRepository.save(usuario);
+    }
+
 }

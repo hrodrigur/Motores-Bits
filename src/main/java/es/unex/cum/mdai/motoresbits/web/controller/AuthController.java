@@ -34,10 +34,18 @@ public class AuthController {
                               HttpSession session) {
         try {
             Usuario u = usuarioService.login(email, contrasena);
+
             session.setAttribute("usuarioId", u.getId());
             session.setAttribute("usuarioNombre", u.getNombre());
+
             // guardar rol en sesión para mostrar acciones de admin
-            if (u.getRol() != null) session.setAttribute("usuarioRol", u.getRol().name());
+            if (u.getRol() != null) {
+                session.setAttribute("usuarioRol", u.getRol().name());
+            }
+
+            // ✅ guardar saldo en sesión para mostrarlo en el header
+            session.setAttribute("usuarioSaldo", u.getSaldo());
+
             return "redirect:/";
         } catch (Exception ex) {
             model.addAttribute("error", "Credenciales inválidas");
@@ -58,7 +66,6 @@ public class AuthController {
                                  HttpSession session) {
         try {
             usuarioService.registrarCliente(nombre, email, contrasena);
-            // No iniciar sesion automaticamente. Volver al login para que el usuario inicie sesion.
             return "redirect:/login?registered=true";
         } catch (Exception ex) {
             model.addAttribute("error", ex.getMessage());

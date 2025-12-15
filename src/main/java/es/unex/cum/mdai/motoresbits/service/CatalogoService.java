@@ -13,22 +13,29 @@ public interface CatalogoService {
     Categoria crearCategoria(String nombre, String descripcion);
     Categoria editarCategoria(Long id, String nombre, String descripcion);
     Categoria obtenerCategoria(Long id);
+
+
+    Categoria obtenerCategoriaPorNombre(String nombre);
+
     List<Categoria> listarCategorias();
     void eliminarCategoria(Long id);
 
     // ---- PRODUCTOS ----
     Producto crearProducto(Long idCategoria, String nombre, String referencia,
-                           BigDecimal precio, Integer stock);
+                           BigDecimal precio, Integer stock, String imagenUrl);
 
     Producto editarProducto(Long id, Long idCategoria, String nombre,
-                            BigDecimal precio, Integer stock);
+                            BigDecimal precio, Integer stock, String imagenUrl);
 
     Producto obtenerProducto(Long id);
+
+
+    Producto obtenerProductoPorReferencia(String referencia);
+
     List<Producto> listarProductos();
     List<Producto> listarPorCategoria(Long idCategoria);
     void eliminarProducto(Long id);
 
-    // Nuevos métodos para listar productos con nombre de categoría precargado
-    java.util.List<ProductoAdminDto> listarProductosConCategoria();
-    java.util.List<ProductoAdminDto> listarPorCategoriaConCategoria(Long idCategoria);
+    List<ProductoAdminDto> listarProductosConCategoria();
+    List<ProductoAdminDto> listarPorCategoriaConCategoria(Long idCategoria);
 }

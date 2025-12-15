@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,91 +31,82 @@ public class PedidoController {
 
     @GetMapping("/carrito")
     public String verCarrito(HttpSession session, Model model) {
-        @SuppressWarnings("unchecked")
-        Map<Long,Integer> cart = (Map<Long,Integer>) session.getAttribute("cartItems");
-        if (cart != null && !cart.isEmpty()) {
-            Pedido temp = new Pedido();
-            for (Map.Entry<Long,Integer> e : cart.entrySet()) {
-                Long prodId = e.getKey();
-                Integer qty = e.getValue();
-                Producto p = catalogoService.obtenerProducto(prodId);
-                DetallePedido d = new DetallePedido();
-                d.setProducto(p);
-                d.setCantidad(qty);
-                d.setPrecio(p.getPrecio());
-                d.setPedido(temp);
-                temp.getDetalles().add(d);
-            }
-            temp.setTotal(temp.getDetalles().stream()
-                    .map(d -> d.getPrecio().multiply(java.math.BigDecimal.valueOf(d.getCantidad())))
-                    .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
-            model.addAttribute("pedido", temp);
 
-            Object cartMsg = session.getAttribute("cartMsg");
-            if (cartMsg != null) {
-                model.addAttribute("cartMsg", cartMsg);
-                session.removeAttribute("cartMsg");
-            }
-
-            return "carrito";
+        Object cartMsg = session.getAttribute("cartMsg");
+        if (cartMsg != null) {
+            model.addAttribute("cartMsg", cartMsg.toString());
+            session.removeAttribute("cartMsg");
         }
 
-        Object pedidoIdObj = session.getAttribute("pedidoId");
-        if (pedidoIdObj == null) {
+        Object ok = session.getAttribute("carritoOk");
+        if (ok != null) {
+            model.addAttribute("success", ok.toString());
+            session.removeAttribute("carritoOk");
+        }
+
+        Object err = session.getAttribute("carritoError");
+        if (err != null) {
+            model.addAttribute("error", err.toString());
+            session.removeAttribute("carritoError");
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cartItems");
+
+        if (cart == null || cart.isEmpty()) {
             model.addAttribute("pedido", null);
             return "carrito";
         }
-        Long pedidoId = (Long) pedidoIdObj;
-        Pedido pedido = pedidoService.obtenerPedido(pedidoId);
-        model.addAttribute("pedido", pedido);
+
+        // Pedido temporal solo para pintar
+        Pedido temp = new Pedido();
+        for (Map.Entry<Long, Integer> e : cart.entrySet()) {
+            Producto p = catalogoService.obtenerProducto(e.getKey());
+
+            DetallePedido d = new DetallePedido();
+            d.setProducto(p);
+            d.setCantidad(e.getValue());
+            d.setPrecio(p.getPrecio());
+            d.setPedido(temp);
+            temp.getDetalles().add(d);
+        }
+
+        BigDecimal total = temp.getDetalles().stream()
+                .map(d -> d.getPrecio().multiply(BigDecimal.valueOf(d.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        temp.setTotal(total);
+
+        model.addAttribute("pedido", temp);
         return "carrito";
     }
 
+    // ✅ PARA EL BOTÓN/CARRITO EN EL CATÁLOGO: NO te manda al producto, te manda al carrito
     @PostMapping("/carrito/agregar")
     public String agregarAlCarrito(@RequestParam Long idProducto,
                                    @RequestParam int cantidad,
                                    HttpSession session) {
-
-        @SuppressWarnings("unchecked")
-        Map<Long,Integer> cart = (Map<Long,Integer>) session.getAttribute("cartItems");
-        if (cart == null) { cart = new HashMap<>(); }
-
-        Producto prod = catalogoService.obtenerProducto(idProducto);
-        int available = prod.getStock() == null ? 0 : prod.getStock();
-
-        if (cantidad > 100) cantidad = 100;
-
-        int current = cart.getOrDefault(idProducto, 0);
-        int requestedTotal = current + cantidad;
-        if (requestedTotal > 100) requestedTotal = 100;
-
-        if (requestedTotal > available) {
-            requestedTotal = available;
-            session.setAttribute("cartMsg", "La cantidad solicitada se ha ajustado al stock disponible: " + available);
-        }
-
-        cart.put(idProducto, requestedTotal);
-        session.setAttribute("cartItems", cart);
-
-        int totalItems = cart.values().stream().mapToInt(Integer::intValue).sum();
-        session.setAttribute("pedidoCantidad", totalItems);
-
-        return "redirect:/carrito";
+        return agregarInterno(idProducto, cantidad, session, "redirect:/carrito");
     }
 
+    // ✅ PARA EL BOTÓN "Añadir al carrito" EN EL DETALLE: te devuelve al producto
     @PostMapping("/carrito/anadir")
-    public String anadirAlCarrito(@RequestParam Long idProducto,
-                                  @RequestParam int cantidad,
-                                  HttpSession session) {
+    public String anadirDesdeDetalle(@RequestParam Long idProducto,
+                                     @RequestParam int cantidad,
+                                     HttpSession session) {
+        return agregarInterno(idProducto, cantidad, session, "redirect:/producto/" + idProducto);
+    }
 
+    private String agregarInterno(Long idProducto, int cantidad, HttpSession session, String redirectTo) {
         @SuppressWarnings("unchecked")
-        Map<Long,Integer> cart = (Map<Long,Integer>) session.getAttribute("cartItems");
-        if (cart == null) { cart = new HashMap<>(); }
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cartItems");
+        if (cart == null) cart = new HashMap<>();
 
         Producto prod = catalogoService.obtenerProducto(idProducto);
         int available = prod.getStock() == null ? 0 : prod.getStock();
 
         if (cantidad > 100) cantidad = 100;
+        if (cantidad < 1) cantidad = 1;
 
         int current = cart.getOrDefault(idProducto, 0);
         int requestedTotal = current + cantidad;
@@ -125,101 +117,94 @@ public class PedidoController {
             session.setAttribute("cartMsg", "La cantidad solicitada se ha ajustado al stock disponible: " + available);
         }
 
-        cart.put(idProducto, requestedTotal);
+        // si no hay stock, no lo metemos
+        if (requestedTotal <= 0) {
+            cart.remove(idProducto);
+        } else {
+            cart.put(idProducto, requestedTotal);
+        }
+
         session.setAttribute("cartItems", cart);
 
         int totalItems = cart.values().stream().mapToInt(Integer::intValue).sum();
         session.setAttribute("pedidoCantidad", totalItems);
 
-        return "redirect:/producto/" + idProducto;
+        return redirectTo;
     }
 
     @PostMapping("/carrito/eliminar")
-    public String eliminarLinea(@RequestParam Long idProducto,
-                                HttpSession session) {
-
+    public String eliminarLinea(@RequestParam Long idProducto, HttpSession session) {
         @SuppressWarnings("unchecked")
-        Map<Long,Integer> cart = (Map<Long,Integer>) session.getAttribute("cartItems");
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cartItems");
+
         if (cart != null) {
             cart.remove(idProducto);
-            session.setAttribute("cartItems", cart);
-            int totalItems = cart.values().stream().mapToInt(Integer::intValue).sum();
-            session.setAttribute("pedidoCantidad", totalItems);
+
+            if (cart.isEmpty()) {
+                session.removeAttribute("cartItems");
+                session.setAttribute("pedidoCantidad", 0);
+            } else {
+                session.setAttribute("cartItems", cart);
+                int totalItems = cart.values().stream().mapToInt(Integer::intValue).sum();
+                session.setAttribute("pedidoCantidad", totalItems);
+            }
         } else {
             session.setAttribute("pedidoCantidad", 0);
         }
+
         return "redirect:/carrito";
     }
 
     @PostMapping("/pedido/confirmar")
-    public String confirmarPedido(HttpSession session, Model model) {
+    public String confirmarPedido(HttpSession session) {
+
         Long usuarioId = (Long) session.getAttribute("usuarioId");
-        if (usuarioId == null) {
-            return "redirect:/login";
-        }
+        if (usuarioId == null) return "redirect:/login";
 
         @SuppressWarnings("unchecked")
-        Map<Long,Integer> cart = (Map<Long,Integer>) session.getAttribute("cartItems");
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cartItems");
         if (cart == null || cart.isEmpty()) {
-            model.addAttribute("error", "No hay artículos en el carrito");
-            return "carrito";
+            session.setAttribute("carritoError", "No hay artículos en el carrito");
+            return "redirect:/carrito";
         }
 
         Long nuevoId = null;
         try {
+            // ✅ crear pedido SOLO aquí
             var nuevo = pedidoService.crearPedido(usuarioId);
             nuevoId = nuevo.getId();
 
-            for (Map.Entry<Long,Integer> e : cart.entrySet()) {
+            for (Map.Entry<Long, Integer> e : cart.entrySet()) {
                 pedidoService.agregarLinea(nuevoId, e.getKey(), e.getValue());
             }
 
-            // ✅ confirmar (esto ya descuenta stock + saldo en el service)
+            // ✅ confirma = paga si hay saldo + stock
             Pedido pedidoConfirmado = pedidoService.confirmarPedido(nuevoId);
 
-            // ✅ actualizar saldo en sesión (para que se vea en el header)
-            if (pedidoConfirmado.getUsuario() != null) {
+            // saldo actualizado en sesión (header)
+            if (pedidoConfirmado.getUsuario() != null && pedidoConfirmado.getUsuario().getSaldo() != null) {
                 session.setAttribute("usuarioSaldo", pedidoConfirmado.getUsuario().getSaldo());
             }
 
-            // limpiar sesión del carrito
+            // ✅ vaciar carrito al éxito
             session.removeAttribute("cartItems");
-            session.removeAttribute("pedidoCantidad");
-            session.setAttribute("pedidoId", nuevoId);
+            session.setAttribute("pedidoCantidad", 0);
 
-            model.addAttribute("success", "Pedido confirmado correctamente");
-            return "checkout";
+            session.setAttribute("carritoOk", "Pedido confirmado y pagado correctamente");
+            return "redirect:/carrito";
 
-        } catch (SaldoInsuficienteException ex) {
+        } catch (SaldoInsuficienteException | StockInsuficienteException ex) {
+            // borramos el pedido “a medias”
+            try { if (nuevoId != null) pedidoService.eliminarPedido(nuevoId); } catch (Exception ignore) {}
 
-            try {
-                if (nuevoId != null) pedidoService.eliminarPedido(nuevoId);
-            } catch (Exception ignore) {}
-
-            model.addAttribute("error", ex.getMessage());
-            return "carrito";
-
-        } catch (StockInsuficienteException ex) {
-
-            try {
-                if (nuevoId != null) pedidoService.eliminarPedido(nuevoId);
-            } catch (Exception ignore) {}
-
-            session.removeAttribute("cartItems");
-            session.removeAttribute("pedidoCantidad");
-            session.removeAttribute("pedidoId");
-
-            model.addAttribute("error", ex.getMessage());
-            return "carrito";
+            session.setAttribute("carritoError", ex.getMessage());
+            return "redirect:/carrito";
 
         } catch (Exception ex) {
+            try { if (nuevoId != null) pedidoService.eliminarPedido(nuevoId); } catch (Exception ignore) {}
 
-            try {
-                if (nuevoId != null) pedidoService.eliminarPedido(nuevoId);
-            } catch (Exception ignore) {}
-
-            model.addAttribute("error", ex.getMessage());
-            return "carrito";
+            session.setAttribute("carritoError", "Error al confirmar el pedido: " + ex.getMessage());
+            return "redirect:/carrito";
         }
     }
 }

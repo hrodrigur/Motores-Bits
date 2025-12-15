@@ -39,8 +39,6 @@ public class PedidoServiceImpl implements PedidoService {
         this.detallePedidoRepository = detallePedidoRepository;
     }
 
-    // -------------------- CREAR / OBTENER / LISTAR --------------------
-
     @Override
     public Pedido crearPedido(Long idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
@@ -61,10 +59,7 @@ public class PedidoServiceImpl implements PedidoService {
         Pedido pedido = pedidoRepository.findConLineasYProductos(idPedido)
                 .orElseThrow(() -> new PedidoNoEncontradoException(idPedido));
 
-        if (pedido.getUsuario() != null) {
-            pedido.getUsuario().getNombre();
-        }
-
+        if (pedido.getUsuario() != null) pedido.getUsuario().getNombre();
         return pedido;
     }
 
@@ -80,13 +75,9 @@ public class PedidoServiceImpl implements PedidoService {
         return pedidoRepository.findAllConUsuarioYLineasYProductos();
     }
 
-    // -------------------- LÍNEAS DE PEDIDO --------------------
-
     @Override
     public Pedido agregarLinea(Long idPedido, Long idProducto, int cantidad) {
-        if (cantidad <= 0) {
-            throw new IllegalArgumentException("La cantidad debe ser mayor que cero");
-        }
+        if (cantidad <= 0) throw new IllegalArgumentException("La cantidad debe ser mayor que cero");
 
         Pedido pedido = obtenerPedidoParaModificacion(idPedido);
         Producto producto = productoRepository.findById(idProducto)
@@ -107,20 +98,12 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public Pedido cambiarCantidadLinea(Long idPedido, Long idProducto, int nuevaCantidad) {
-        if (nuevaCantidad < 0) {
-            throw new IllegalArgumentException("La cantidad no puede ser negativa");
-        }
-
-        if (nuevaCantidad == 0) {
-            return eliminarLinea(idPedido, idProducto);
-        }
+        if (nuevaCantidad < 0) throw new IllegalArgumentException("La cantidad no puede ser negativa");
+        if (nuevaCantidad == 0) return eliminarLinea(idPedido, idProducto);
 
         Pedido pedido = obtenerPedidoParaModificacion(idPedido);
-
         DetallePedido detalle = buscarDetalleEnPedido(pedido, idProducto);
-        if (detalle == null) {
-            throw new LineaPedidoNoEncontradaException(idPedido, idProducto);
-        }
+        if (detalle == null) throw new LineaPedidoNoEncontradaException(idPedido, idProducto);
 
         detalle.setCantidad(nuevaCantidad);
         recalcularTotal(pedido);
@@ -132,17 +115,13 @@ public class PedidoServiceImpl implements PedidoService {
     public Pedido eliminarLinea(Long idPedido, Long idProducto) {
         Pedido pedidoActual = obtenerPedidoParaModificacion(idPedido);
         DetallePedido detalle = buscarDetalleEnPedido(pedidoActual, idProducto);
-        if (detalle == null) {
-            throw new LineaPedidoNoEncontradaException(idPedido, idProducto);
-        }
+        if (detalle == null) throw new LineaPedidoNoEncontradaException(idPedido, idProducto);
 
         pedidoActual.removeLinea(detalle);
         recalcularTotal(pedidoActual);
 
         return pedidoRepository.save(pedidoActual);
     }
-
-    // -------------------- ESTADO Y ELIMINACIÓN --------------------
 
     @Override
     public Pedido cambiarEstado(Long idPedido, EstadoPedido nuevoEstado) {
@@ -152,7 +131,9 @@ public class PedidoServiceImpl implements PedidoService {
         EstadoPedido actual = pedido.getEstado();
         validarTransicionEstado(actual, nuevoEstado);
 
-        if (nuevoEstado == EstadoPedido.CANCELADO && actual == EstadoPedido.PENDIENTE) {
+        // si cancelas un pedido que ya había descontado stock, devuélvelo
+        if (nuevoEstado == EstadoPedido.CANCELADO &&
+                (actual == EstadoPedido.PENDIENTE || actual == EstadoPedido.PAGADO)) {
             if (pedido.getDetalles() != null) {
                 pedido.getDetalles().forEach(d ->
                         productoRepository.incrementarStock(d.getProducto().getId(), d.getCantidad())
@@ -168,10 +149,12 @@ public class PedidoServiceImpl implements PedidoService {
     public void eliminarPedido(Long idPedido) {
         Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new PedidoNoEncontradoException(idPedido));
-
         pedidoRepository.delete(pedido);
     }
 
+    /**
+     * ✅ Confirmar = comprobar stock + saldo, descontar ambos y dejar pedido en PAGADO.
+     */
     @Override
     public Pedido confirmarPedido(Long idPedido) {
         final int MAX_RETRIES = 3;
@@ -183,89 +166,67 @@ public class PedidoServiceImpl implements PedidoService {
             Pedido pedido = pedidoRepository.findConLineasYProductos(idPedido)
                     .orElseThrow(() -> new PedidoNoEncontradoException(idPedido));
 
-            // ✅ Asegurar que el total está bien calculado (por si acaso)
             recalcularTotal(pedido);
             BigDecimal total = pedido.getTotal() != null ? pedido.getTotal() : BigDecimal.ZERO;
 
-            // ✅ Cargar usuario y comprobar saldo
             Long usuarioId = (pedido.getUsuario() != null) ? pedido.getUsuario().getId() : null;
-            if (usuarioId == null) {
-                throw new RuntimeException("El pedido no tiene usuario asociado");
-            }
+            if (usuarioId == null) throw new RuntimeException("El pedido no tiene usuario asociado");
 
             Usuario usuario = usuarioRepository.findById(usuarioId)
                     .orElseThrow(() -> new UsuarioNoEncontradoException(usuarioId));
 
             BigDecimal saldo = usuario.getSaldo() != null ? usuario.getSaldo() : BigDecimal.ZERO;
+            if (saldo.compareTo(total) < 0) throw new SaldoInsuficienteException(saldo, total);
 
-            if (saldo.compareTo(total) < 0) {
-                throw new SaldoInsuficienteException(saldo, total);
+            if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
+                pedido.setEstado(EstadoPedido.PAGADO);
+                pedido.setTotal(total);
+                pedido.setUsuario(usuario);
+                return pedidoRepository.save(pedido);
             }
 
-            // ✅ Verificar stock para cada línea (antes de descontar)
-            if (pedido.getDetalles() != null) {
+            // validar stock
+            for (DetallePedido d : pedido.getDetalles()) {
+                Producto prod = productoRepository.findById(d.getProducto().getId())
+                        .orElseThrow(() -> new ProductoNoEncontradoException(d.getProducto().getId()));
+                int disponible = prod.getStock() == null ? 0 : prod.getStock();
+                if (disponible < d.getCantidad()) {
+                    throw new StockInsuficienteException(prod.getId(), d.getCantidad(), disponible);
+                }
+            }
+
+            try {
+                // descontar stock atómico
                 for (DetallePedido d : pedido.getDetalles()) {
-                    Producto prod = productoRepository.findById(d.getProducto().getId())
-                            .orElseThrow(() -> new ProductoNoEncontradoException(d.getProducto().getId()));
-                    int disponible = prod.getStock();
-                    if (disponible < d.getCantidad()) {
-                        throw new StockInsuficienteException(prod.getId(), d.getCantidad(), disponible);
+                    int updated = productoRepository.descontarStock(d.getProducto().getId(), d.getCantidad());
+                    if (updated == 0) {
+                        int disponible = productoRepository.findById(d.getProducto().getId())
+                                .map(p -> p.getStock() == null ? 0 : p.getStock())
+                                .orElse(0);
+                        throw new StockInsuficienteException(d.getProducto().getId(), d.getCantidad(), disponible);
                     }
                 }
 
-                try {
-                    // ✅ Descontar stock de forma atómica en BD
-                    for (DetallePedido d : pedido.getDetalles()) {
-                        int updated = productoRepository.descontarStock(d.getProducto().getId(), d.getCantidad());
-                        if (updated == 0) {
-                            throw new StockInsuficienteException(
-                                    d.getProducto().getId(),
-                                    d.getCantidad(),
-                                    productoRepository.findById(d.getProducto().getId())
-                                            .map(Producto::getStock)
-                                            .orElse(0)
-                            );
-                        }
-                    }
+                // descontar saldo
+                usuario.setSaldo(saldo.subtract(total));
+                usuarioRepository.save(usuario);
 
-                    // ✅ Si stock ok -> descontar saldo y marcar pedido PENDIENTE
-                    usuario.setSaldo(saldo.subtract(total));
-                    usuarioRepository.save(usuario);
-
-                    pedido.setEstado(EstadoPedido.PENDIENTE);
-                    pedido.setTotal(total);
-                    return pedidoRepository.save(pedido);
-
-                } catch (OptimisticLockingFailureException ex) {
-                    if (attempt >= MAX_RETRIES) {
-                        // revalidar stock y lanzar si procede
-                        for (DetallePedido d : pedido.getDetalles()) {
-                            Producto prod = productoRepository.findById(d.getProducto().getId()).orElseThrow();
-                            int disponible = prod.getStock();
-                            if (disponible < d.getCantidad()) {
-                                throw new StockInsuficienteException(prod.getId(), d.getCantidad(), disponible);
-                            }
-                        }
-                        throw ex;
-                    }
-                    try { TimeUnit.MILLISECONDS.sleep(50L * attempt); }
-                    catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
-
-                } catch (StockInsuficienteException sie) {
-                    if (attempt >= MAX_RETRIES) throw sie;
-                    try { TimeUnit.MILLISECONDS.sleep(50L * attempt); }
-                    catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
-                }
-            } else {
-                // no hay detalles; marcamos PENDIENTE igualmente (y no descontamos saldo)
-                pedido.setEstado(EstadoPedido.PENDIENTE);
+                // ✅ marcar pagado
+                pedido.setEstado(EstadoPedido.PAGADO);
                 pedido.setTotal(total);
+                pedido.setUsuario(usuario);
+
                 return pedidoRepository.save(pedido);
+
+            } catch (OptimisticLockingFailureException | StockInsuficienteException ex) {
+                if (attempt >= MAX_RETRIES) throw ex;
+                try { TimeUnit.MILLISECONDS.sleep(50L * attempt); }
+                catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
             }
         }
     }
 
-    // -------------------- MÉTODOS PRIVADOS AUXILIARES --------------------
+    // -------- helpers --------
 
     private Pedido obtenerPedidoParaModificacion(Long idPedido) {
         return pedidoRepository.findConLineasYProductos(idPedido)
@@ -274,9 +235,7 @@ public class PedidoServiceImpl implements PedidoService {
 
     private DetallePedido buscarDetalleEnPedido(Pedido pedido, Long idProducto) {
         if (pedido.getDetalles() == null) return null;
-
-        return pedido.getDetalles()
-                .stream()
+        return pedido.getDetalles().stream()
                 .filter(d -> d.getProducto() != null && idProducto.equals(d.getProducto().getId()))
                 .findFirst()
                 .orElse(null);
@@ -287,11 +246,9 @@ public class PedidoServiceImpl implements PedidoService {
             pedido.setTotal(BigDecimal.ZERO);
             return;
         }
-
         BigDecimal total = pedido.getDetalles().stream()
                 .map(d -> d.getPrecio().multiply(BigDecimal.valueOf(d.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         pedido.setTotal(total);
     }
 
@@ -300,7 +257,7 @@ public class PedidoServiceImpl implements PedidoService {
 
         switch (actual) {
             case CREADO -> {
-                if (nuevo != EstadoPedido.PENDIENTE && nuevo != EstadoPedido.CANCELADO) {
+                if (nuevo != EstadoPedido.PENDIENTE && nuevo != EstadoPedido.PAGADO && nuevo != EstadoPedido.CANCELADO) {
                     throw new EstadoPedidoInvalidoException(actual, nuevo);
                 }
             }
@@ -319,8 +276,7 @@ public class PedidoServiceImpl implements PedidoService {
                     throw new EstadoPedidoInvalidoException(actual, nuevo);
                 }
             }
-            case ENTREGADO, CANCELADO ->
-                    throw new EstadoPedidoInvalidoException(actual, nuevo);
+            case ENTREGADO, CANCELADO -> throw new EstadoPedidoInvalidoException(actual, nuevo);
         }
     }
 }

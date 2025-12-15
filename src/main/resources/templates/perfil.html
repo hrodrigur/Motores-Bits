@@ -48,14 +48,10 @@
             Editar perfil
         </button>
 
-        <a th:href="@{/perfil/saldo}" class="btn btn-success">
+        <a th:if="${session.usuarioRol == null || session.usuarioRol != 'ADMIN'}"
+           th:href="@{/perfil/saldo}"
+           class="btn btn-success">
             Añadir saldo
-        </a>
-
-        <a th:if="${session.usuarioRol == 'ADMIN'}"
-           th:href="@{/admin/usuarios/saldo}"
-           class="btn btn-warning">
-            Gestionar saldos
         </a>
 
         <form th:action="@{/logout}" method="post">

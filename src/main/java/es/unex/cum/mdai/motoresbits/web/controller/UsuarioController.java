@@ -222,55 +222,6 @@ public class UsuarioController {
         }
     }
 
-    // =========================================================
-    // ADMIN: Ajustar saldo a CUALQUIER USUARIO
-    // =========================================================
 
-    @GetMapping("/admin/usuarios/saldo")
-    public String adminUsuariosSaldo(HttpSession session, Model model) {
-        if (!isAdmin(session)) return "redirect:/";
 
-        model.addAttribute("usuarios", usuarioService.listarTodos());
-        return "admin-usuarios-saldo";
-    }
-
-    @GetMapping("/admin/usuarios/{id}/saldo")
-    public String adminFormSaldo(@PathVariable Long id,
-                                 @RequestParam(defaultValue = "add") String op,
-                                 HttpSession session,
-                                 Model model) {
-        if (!isAdmin(session)) return "redirect:/";
-
-        model.addAttribute("usuario", usuarioService.getById(id));
-        model.addAttribute("op", op); // add | sub
-        return "admin-usuario-saldo-form";
-    }
-
-    @PostMapping("/admin/usuarios/{id}/saldo")
-    public String adminAjustarSaldo(@PathVariable Long id,
-                                    @RequestParam BigDecimal cantidad,
-                                    @RequestParam(defaultValue = "add") String op,
-                                    HttpSession session,
-                                    Model model) {
-        if (!isAdmin(session)) return "redirect:/";
-
-        try {
-            BigDecimal delta = op.equals("sub") ? cantidad.negate() : cantidad;
-            Usuario actualizado = usuarioService.ajustarSaldo(id, delta);
-
-            // refrescar header si el admin se ajusta a sí mismo
-            Long sessionUserId = (Long) session.getAttribute("usuarioId");
-            if (sessionUserId != null && sessionUserId.equals(id)) {
-                session.setAttribute("usuarioSaldo", actualizado.getSaldo());
-            }
-
-            return "redirect:/admin/usuarios/saldo";
-
-        } catch (Exception ex) {
-            model.addAttribute("usuario", usuarioService.getById(id));
-            model.addAttribute("op", op);
-            model.addAttribute("error", ex.getMessage());
-            return "admin-usuario-saldo-form";
-        }
-    }
 }

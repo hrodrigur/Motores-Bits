@@ -44,6 +44,9 @@ public class Producto implements Serializable {
 
     @Column(name = "imagen", length = 120)
     private String imagen;
+
+    @Column(name = "imagen_url", length = 1000)
+    private String imagenUrl;
     @Version
     private Integer version;
 
@@ -82,4 +85,7 @@ public class Producto implements Serializable {
 
     public String getImagen() { return imagen; }
     public void setImagen(String imagen) { this.imagen = imagen; }
+
+    public String getImagenUrl() { return imagenUrl; }
+    public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
 }

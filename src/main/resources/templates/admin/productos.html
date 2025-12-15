@@ -1,163 +1,226 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin - Productos</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin - Productos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body>
-  <div th:replace="fragments/header :: header"></div>
-  <div class="container mt-4">
+<div th:replace="fragments/header :: header"></div>
+
+<div class="container mt-4">
     <h1>Productos</h1>
 
     <div th:if="${selectedCategoriaId != null}" class="mb-2">
-      <strong>Filtrando por categoría:</strong>
-      <!-- Thymeleaf no soporta lambdas en expresiones, usamos each+if para encontrar la categoría -->
-      <span th:each="cat : ${categorias}" th:if="${cat.id == selectedCategoriaId}" th:text="${cat.nombre}"></span>
-      <a th:href="@{/admin/productos}" class="btn btn-sm btn-link">(mostrar todos)</a>
+        <strong>Filtrando por categoría:</strong>
+        <span th:each="cat : ${categorias}" th:if="${cat.id == selectedCategoriaId}" th:text="${cat.nombre}"></span>
+        <a th:href="@{/admin/productos}" class="btn btn-sm btn-link">(mostrar todos)</a>
     </div>
 
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
+    <!-- FORM CREAR PRODUCTO -->
     <form th:action="@{/admin/productos/crear}" method="post" class="mb-3 row g-2 align-items-end">
-      <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-      <div class="col-md-3">
-        <label for="idCategoriaSel" class="form-label">Categoría</label>
-        <select id="idCategoriaSel" name="idCategoria" class="form-select" required>
-          <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}"></option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label for="nombreProd" class="form-label">Nombre</label>
-        <input id="nombreProd" type="text" name="nombre" placeholder="Nombre" class="form-control" maxlength="30" required />
-      </div>
-      <div class="col-md-2">
-        <label for="referenciaProd" class="form-label">Referencia</label>
-        <input id="referenciaProd" type="text" name="referencia" placeholder="Referencia" class="form-control" maxlength="15" required />
-      </div>
-      <div class="col-md-2">
-        <label for="precioProd" class="form-label">Precio</label>
-        <input id="precioProd" type="number" step="0.01" name="precio" placeholder="Precio" class="form-control" max="999999999.99" required />
-      </div>
-      <div class="col-md-1">
-        <label for="stockProd" class="form-label">Stock</label>
-        <input id="stockProd" type="number" name="stock" placeholder="Stock" class="form-control" min="0" max="100" required />
-      </div>
-      <div class="col-md-1">
-        <button class="btn btn-primary">Crear</button>
-      </div>
+        <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <div class="col-md-3">
+            <label for="idCategoriaSel" class="form-label">Categoría</label>
+            <select id="idCategoriaSel" name="idCategoria" class="form-select" required>
+                <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}"></option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="nombreProd" class="form-label">Nombre</label>
+            <input id="nombreProd" type="text" name="nombre" placeholder="Nombre" class="form-control" maxlength="30" required />
+        </div>
+
+        <div class="col-md-2">
+            <label for="referenciaProd" class="form-label">Referencia</label>
+            <input id="referenciaProd" type="text" name="referencia" placeholder="Referencia" class="form-control" maxlength="15" required />
+        </div>
+
+        <div class="col-md-2">
+            <label for="precioProd" class="form-label">Precio</label>
+            <input id="precioProd" type="number" step="0.01" name="precio" placeholder="Precio" class="form-control" max="999999999.99" required />
+        </div>
+
+        <div class="col-md-1">
+            <label for="stockProd" class="form-label">Stock</label>
+            <input id="stockProd" type="number" name="stock" placeholder="Stock" class="form-control" min="0" max="100" required />
+        </div>
+
+        <!-- URL IMAGEN -->
+        <div class="col-md-4">
+            <label for="imagenUrlProd" class="form-label">URL imagen</label>
+            <input id="imagenUrlProd" type="url" name="imagenUrl" placeholder="https://..." class="form-control" maxlength="1000" />
+        </div>
+
+        <div class="col-md-1">
+            <button class="btn btn-primary">Crear</button>
+        </div>
     </form>
 
     <div th:if="${productos == null or #lists.isEmpty(productos)}">
-      <p class="text-muted">No hay productos todavía.</p>
+        <p class="text-muted">No hay productos todavía.</p>
     </div>
 
     <div th:if="${productos != null and !#lists.isEmpty(productos)}">
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Referencia</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Categoría</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr th:each="p : ${productos}">
-            <td th:text="${p.id}"></td>
-            <td>
-              <div class="static-name" th:text="${p.nombre}"></div>
-            </td>
-            <td th:text="${p.referencia}"></td>
-            <td>
-              <div class="static-precio" th:text="${p.precio}"></div>
-            </td>
-            <td>
-              <div class="static-stock" th:text="${p.stock}"></div>
-            </td>
-            <td>
-              <div class="static-cat" th:text="${p.nombreCategoria}"></div>
-            </td>
-            <td>
-              <div class="actions">
-                <button type="button" class="btn btn-sm btn-outline-secondary me-2 btn-edit">Editar</button>
-                <form th:action="@{/admin/productos/eliminar}" method="post" class="d-inline">
-                  <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                  <input type="hidden" name="id" th:value="${p.id}" />
-                  <button class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar producto?')">Eliminar</button>
-                </form>
-              </div>
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Referencia</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Categoría</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
 
-              <!-- Edit form inline (oculto por defecto) -->
-              <form th:action="@{/admin/productos/editar}" method="post" class="edit-form d-none mt-2">
-                <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <input type="hidden" name="id" th:value="${p.id}" />
-                <div class="row g-2 align-items-end">
-                  <div class="col-12 col-md-4">
-                    <label th:for="${'nombre-p-' + p.id}" class="form-label visually-hidden">Nombre</label>
-                    <input th:id="${'nombre-p-' + p.id}" type="text" name="nombre" th:value="${p.nombre}" class="form-control" maxlength="30" required />
-                  </div>
-                  <div class="col-12 col-md-3">
-                    <label th:for="${'cat-p-' + p.id}" class="form-label visually-hidden">Categoría</label>
-                    <select th:id="${'cat-p-' + p.id}" name="idCategoria" class="form-select" required>
-                      <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}" th:selected="${cat.nombre == p.nombreCategoria}"></option>
-                    </select>
-                  </div>
-                  <div class="col-6 col-md-2">
-                    <label th:for="${'precio-p-' + p.id}" class="form-label visually-hidden">Precio</label>
-                    <input th:id="${'precio-p-' + p.id}" type="number" step="0.01" name="precio" th:value="${p.precio}" class="form-control" max="999999999.99" required />
-                  </div>
-                  <div class="col-4 col-md-2">
-                    <label th:for="${'stock-p-' + p.id}" class="form-label visually-hidden">Stock</label>
-                    <input th:id="${'stock-p-' + p.id}" type="number" name="stock" th:value="${p.stock}" class="form-control" min="0" max="100" required />
-                  </div>
-                  <div class="col-2 col-md-1">
-                    <button class="btn btn-sm btn-success">Guardar</button>
-                  </div>
-                  <div class="col-2 col-md-1">
-                    <button type="button" class="btn btn-sm btn-secondary btn-cancel-edit">Cancelar</button>
-                  </div>
-                </div>
-              </form>
+            <tbody>
+            <tr th:each="p : ${productos}">
+                <td th:text="${p.id}"></td>
 
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <!-- ✅ MINIATURA CON PRIORIDAD:
+                     1) imagenUrl
+                     2) imagen local (si existe en el DTO)
+                     3) placeholder -->
+                <td>
+                    <!-- 1) imagenUrl -->
+                    <img th:if="${p.imagenUrl != null and !#strings.isEmpty(p.imagenUrl)}"
+                         th:src="${p.imagenUrl}"
+                         alt="img"
+                         style="width:64px; height:64px; object-fit:contain; border:1px solid #eee; padding:2px; border-radius:6px; background:#fff;">
+
+                    <!-- 2) imagen local (solo si tu DTO tiene p.imagen) -->
+                    <img th:if="${(p.imagenUrl == null or #strings.isEmpty(p.imagenUrl)) and (p.imagen != null and !#strings.isEmpty(p.imagen))}"
+                         th:src="@{/images/{img}(img=${p.imagen})}"
+                         alt="img"
+                         style="width:64px; height:64px; object-fit:contain; border:1px solid #eee; padding:2px; border-radius:6px; background:#fff;">
+
+                    <!-- 3) placeholder -->
+                    <img th:if="${(p.imagenUrl == null or #strings.isEmpty(p.imagenUrl)) and (p.imagen == null or #strings.isEmpty(p.imagen))}"
+                         th:src="@{/images/placeholder-product.svg}"
+                         alt="sin imagen"
+                         style="width:64px; height:64px; object-fit:contain; border:1px solid #eee; padding:2px; border-radius:6px; background:#fff; opacity:.85;">
+                </td>
+
+                <td>
+                    <div class="static-name" th:text="${p.nombre}"></div>
+                </td>
+
+                <td th:text="${p.referencia}"></td>
+
+                <td>
+                    <div class="static-precio" th:text="${p.precio}"></div>
+                </td>
+
+                <td>
+                    <div class="static-stock" th:text="${p.stock}"></div>
+                </td>
+
+                <td>
+                    <div class="static-cat" th:text="${p.nombreCategoria}"></div>
+                </td>
+
+                <td>
+                    <div class="actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-2 btn-edit">Editar</button>
+
+                        <form th:action="@{/admin/productos/eliminar}" method="post" class="d-inline">
+                            <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <input type="hidden" name="id" th:value="${p.id}" />
+                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar producto?')">Eliminar</button>
+                        </form>
+                    </div>
+
+                    <!-- EDIT FORM inline -->
+                    <form th:action="@{/admin/productos/editar}" method="post" class="edit-form d-none mt-2">
+                        <input type="hidden" th:if="${_csrf != null}" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <input type="hidden" name="id" th:value="${p.id}" />
+
+                        <div class="row g-2 align-items-end">
+                            <div class="col-12 col-md-3">
+                                <label th:for="${'nombre-p-' + p.id}" class="form-label visually-hidden">Nombre</label>
+                                <input th:id="${'nombre-p-' + p.id}" type="text" name="nombre" th:value="${p.nombre}" class="form-control" maxlength="30" required />
+                            </div>
+
+                            <div class="col-12 col-md-2">
+                                <label th:for="${'cat-p-' + p.id}" class="form-label visually-hidden">Categoría</label>
+                                <select th:id="${'cat-p-' + p.id}" name="idCategoria" class="form-select" required>
+                                    <option th:each="cat : ${categorias}"
+                                            th:value="${cat.id}"
+                                            th:text="${cat.nombre}"
+                                            th:selected="${cat.nombre == p.nombreCategoria}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-6 col-md-2">
+                                <label th:for="${'precio-p-' + p.id}" class="form-label visually-hidden">Precio</label>
+                                <input th:id="${'precio-p-' + p.id}" type="number" step="0.01" name="precio" th:value="${p.precio}"
+                                       class="form-control" max="999999999.99" required />
+                            </div>
+
+                            <div class="col-6 col-md-1">
+                                <label th:for="${'stock-p-' + p.id}" class="form-label visually-hidden">Stock</label>
+                                <input th:id="${'stock-p-' + p.id}" type="number" name="stock" th:value="${p.stock}"
+                                       class="form-control" min="0" max="100" required />
+                            </div>
+
+                            <!-- URL imagen en edición -->
+                            <div class="col-12 col-md-3">
+                                <label th:for="${'img-p-' + p.id}" class="form-label visually-hidden">URL imagen</label>
+                                <input th:id="${'img-p-' + p.id}" type="url" name="imagenUrl" th:value="${p.imagenUrl}"
+                                       class="form-control" placeholder="https://..." maxlength="1000" />
+                            </div>
+
+                            <div class="col-6 col-md-1">
+                                <button class="btn btn-sm btn-success">Guardar</button>
+                            </div>
+
+                            <div class="col-6 col-md-1">
+                                <button type="button" class="btn btn-sm btn-secondary btn-cancel-edit">Cancelar</button>
+                            </div>
+                        </div>
+                    </form>
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
+</div>
 
-    <div class="mt-3">
-      <!-- Link to manage categories removed as requested -->
-    </div>
-  </div>
-  <div th:replace="fragments/footer :: footer"></div>
+<div th:replace="fragments/footer :: footer"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // Toggle inline edit form for products
-  document.addEventListener('click', function(e){
-    if(e.target && e.target.classList.contains('btn-edit')){
-      const tr = e.target.closest('tr');
-      const form = tr.querySelector('.edit-form');
-      const staticBlocks = tr.querySelectorAll('.static-name, .static-precio, .static-stock, .static-cat');
-      if(form) form.classList.remove('d-none');
-      staticBlocks.forEach(b => b.style.display = 'none');
-      e.target.style.display = 'none';
-    }
+    // Toggle inline edit form for products
+    document.addEventListener('click', function(e){
+        if(e.target && e.target.classList.contains('btn-edit')){
+            const tr = e.target.closest('tr');
+            const form = tr.querySelector('.edit-form');
+            const staticBlocks = tr.querySelectorAll('.static-name, .static-precio, .static-stock, .static-cat');
+            if(form) form.classList.remove('d-none');
+            staticBlocks.forEach(b => b.style.display = 'none');
+            e.target.style.display = 'none';
+        }
 
-    if(e.target && e.target.classList.contains('btn-cancel-edit')){
-      const tr = e.target.closest('tr');
-      const form = tr.querySelector('.edit-form');
-      const staticBlocks = tr.querySelectorAll('.static-name, .static-precio, .static-stock, .static-cat');
-      if(form) form.classList.add('d-none');
-      staticBlocks.forEach(b => b.style.display = 'block');
-      const editBtn = tr.querySelector('.btn-edit'); if(editBtn) editBtn.style.display = 'inline-block';
-    }
-  });
+        if(e.target && e.target.classList.contains('btn-cancel-edit')){
+            const tr = e.target.closest('tr');
+            const form = tr.querySelector('.edit-form');
+            const staticBlocks = tr.querySelectorAll('.static-name, .static-precio, .static-stock, .static-cat');
+            if(form) form.classList.add('d-none');
+            staticBlocks.forEach(b => b.style.display = 'block');
+            const editBtn = tr.querySelector('.btn-edit'); if(editBtn) editBtn.style.display = 'inline-block';
+        }
+    });
 </script>
 </body>
 </html>

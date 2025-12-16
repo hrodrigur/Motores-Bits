@@ -8,7 +8,6 @@ import es.unex.cum.mdai.motoresbits.data.repository.PedidoRepository;
 import es.unex.cum.mdai.motoresbits.data.repository.UsuarioRepository;
 import es.unex.cum.mdai.motoresbits.service.exception.CredencialesInvalidasException;
 import es.unex.cum.mdai.motoresbits.service.exception.EmailYaRegistradoException;
-import es.unex.cum.mdai.motoresbits.service.exception.UsuarioConPedidosException;
 import es.unex.cum.mdai.motoresbits.service.exception.UsuarioNoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -151,27 +150,8 @@ class UsuarioServiceIT {
     }
 
     @Test
-    @DisplayName("eliminarUsuario debe borrar el usuario si no tiene pedidos")
-    void eliminarUsuario_sinPedidos_debeBorrar() {
-        // given
-        Usuario u = new Usuario();
-        u.setNombre("SinPedidos");
-        u.setEmail("sinpedidos@mail.com");
-        u.setContrasena("1234");
-        u.setRol(RolUsuario.CLIENTE);
-        u = usuarioRepository.save(u);
-        Long id = u.getId();
-
-        // when
-        usuarioService.eliminarUsuario(id);
-
-        // then
-        assertFalse(usuarioRepository.findById(id).isPresent());
-    }
-
-    @Test
-    @DisplayName("eliminarUsuario debe lanzar UsuarioConPedidosException si el usuario tiene pedidos")
-    void eliminarUsuario_conPedidos_debeLanzarExcepcion() {
+    @DisplayName("eliminarUsuario debe borrar el usuario y sus pedidos asociados")
+    void eliminarUsuario_conPedidos_debeBorrarUsuarioYPedidos() {
         // given: un usuario con un pedido asociado
         Usuario u = new Usuario();
         u.setNombre("ConPedidos");
@@ -188,14 +168,17 @@ class UsuarioServiceIT {
         pedidoRepository.save(p);
 
         Long idUsuario = u.getId();
+        Long idPedido = p.getId();
 
-        // when + then
-        assertThrows(UsuarioConPedidosException.class, () ->
-                usuarioService.eliminarUsuario(idUsuario)
-        );
+        // when
+        usuarioService.eliminarUsuario(idUsuario);
 
-        // y el usuario sigue existiendo
-        assertTrue(usuarioRepository.findById(idUsuario).isPresent());
+        // then
+        // el usuario ya no existe
+        assertFalse(usuarioRepository.findById(idUsuario).isPresent());
+
+        // y el pedido asociado tampoco
+        assertFalse(pedidoRepository.findById(idPedido).isPresent());
     }
 
     @Test

@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 @Component
 public class DatabaseInitializer implements CommandLineRunner {
@@ -36,29 +37,50 @@ public class DatabaseInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
+        // Comprobación más robusta: mirar específicamente la existencia y contenido de la tabla 'usuarios'
         boolean debeInicializar = false;
-
         try {
-            // Comprobamos cuántas tablas hay en el esquema actual.
-            // Funciona en MariaDB/MySQL y en H2 en modo MariaDB.
-            Integer totalTables = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) " +
-                            "FROM information_schema.tables " +
-                            "WHERE table_schema = DATABASE()",
+            Integer existeUsuarios = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND LOWER(table_name) = 'usuarios'",
                     Integer.class
             );
 
-            if (totalTables == null || totalTables == 0) {
-                // No hay ninguna tabla → BD "vacía" → hay que lanzar schema.sql
+            if (existeUsuarios == null || existeUsuarios == 0) {
+                // No existe la tabla 'usuarios' → BD vacía o no inicializada
                 debeInicializar = true;
+            } else {
+                // La tabla existe; comprobar si tiene filas
+                try {
+                    Integer cnt = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM usuarios", Integer.class);
+                    if (cnt == null || cnt == 0) {
+                        // existe pero vacía → inicializar
+                        debeInicializar = true;
+                    } else {
+                        // existe y contiene filas → no inicializar
+                        debeInicializar = false;
+                    }
+                } catch (DataAccessException exCount) {
+                    // No se pudo contar filas (posible problema con mayúsculas/identificadores) → intentar con comillas
+                    try {
+                        Integer cnt = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM \"USUARIOS\"", Integer.class);
+                        if (cnt == null || cnt == 0) {
+                            debeInicializar = true;
+                        } else {
+                            debeInicializar = false;
+                        }
+                    } catch (DataAccessException exCount2) {
+                        // Si no podemos decidir, inicializar por seguridad
+                        debeInicializar = true;
+                    }
+                }
             }
         } catch (DataAccessException ex) {
-            // Si falla la consulta (por ejemplo, schema aún no existe bien) → inicializamos por seguridad
+            // Si falla la consulta sobre information_schema, inicializamos por seguridad
             debeInicializar = true;
         }
 
         if (!debeInicializar) {
-            System.out.println("[DB INIT] Ya existen tablas en la base de datos. No se ejecuta schema.sql.");
+            System.out.println("[DB INIT] La tabla 'usuarios' existe y contiene datos. No se ejecuta schema.sql.");
             return;
         }
 

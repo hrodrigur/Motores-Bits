@@ -125,13 +125,40 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public Pedido cambiarEstado(Long idPedido, EstadoPedido nuevoEstado) {
-        Pedido pedido = pedidoRepository.findById(idPedido)
+
+        Pedido pedido = pedidoRepository.findConLineasYProductos(idPedido)
                 .orElseThrow(() -> new PedidoNoEncontradoException(idPedido));
 
         EstadoPedido actual = pedido.getEstado();
         validarTransicionEstado(actual, nuevoEstado);
 
-        // si cancelas un pedido que ya había descontado stock, devuélvelo
+        recalcularTotal(pedido);
+        BigDecimal total = pedido.getTotal() != null ? pedido.getTotal() : BigDecimal.ZERO;
+
+        Long usuarioId = pedido.getUsuario() != null ? pedido.getUsuario().getId() : null;
+        if (usuarioId == null) throw new RuntimeException("El pedido no tiene usuario asociado");
+
+        Usuario usuarioDB = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new UsuarioNoEncontradoException(usuarioId));
+
+        BigDecimal saldoActual = usuarioDB.getSaldo() != null ? usuarioDB.getSaldo() : BigDecimal.ZERO;
+        // 🔴 COBRO: entra a PAGADO
+        if (actual != EstadoPedido.PAGADO && nuevoEstado == EstadoPedido.PAGADO) {
+            if (saldoActual.compareTo(total) < 0) {
+                throw new SaldoInsuficienteException(saldoActual, total);
+            }
+            usuarioDB.setSaldo(saldoActual.subtract(total));
+            usuarioRepository.save(usuarioDB);
+            usuarioRepository.flush();
+        }
+        // ✅ DEVOLVER DINERO
+        if (actual == EstadoPedido.PAGADO && nuevoEstado == EstadoPedido.CANCELADO) {
+            usuarioDB.setSaldo(saldoActual.add(total));
+            usuarioRepository.save(usuarioDB);
+            usuarioRepository.flush();
+        }
+
+        // ✅ DEVOLVER STOCK (tu lógica)
         if (nuevoEstado == EstadoPedido.CANCELADO &&
                 (actual == EstadoPedido.PENDIENTE || actual == EstadoPedido.PAGADO)) {
             if (pedido.getDetalles() != null) {
@@ -142,8 +169,11 @@ public class PedidoServiceImpl implements PedidoService {
         }
 
         pedido.setEstado(nuevoEstado);
+        pedido.setTotal(total);
         return pedidoRepository.save(pedido);
     }
+
+
 
     @Override
     public void eliminarPedido(Long idPedido) {
@@ -210,6 +240,7 @@ public class PedidoServiceImpl implements PedidoService {
                 // descontar saldo
                 usuario.setSaldo(saldo.subtract(total));
                 usuarioRepository.save(usuario);
+                usuarioRepository.flush();
 
                 // ✅ marcar pagado
                 pedido.setEstado(EstadoPedido.PAGADO);

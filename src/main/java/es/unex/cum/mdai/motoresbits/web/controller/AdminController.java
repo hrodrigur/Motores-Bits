@@ -8,6 +8,7 @@ import es.unex.cum.mdai.motoresbits.service.UsuarioService;
 import es.unex.cum.mdai.motoresbits.service.exception.EstadoPedidoInvalidoException;
 import es.unex.cum.mdai.motoresbits.service.exception.ReferenciaProductoDuplicadaException;
 import es.unex.cum.mdai.motoresbits.service.exception.DatosProductoInvalidosException;
+import es.unex.cum.mdai.motoresbits.service.exception.SaldoInsuficienteException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -131,7 +132,7 @@ public class AdminController {
         }
     }
 
-    // ✅ MODIFICADO: también editamos imagenUrl
+
     @PostMapping("/productos/editar")
     public String editarProducto(HttpSession session,
                                  @RequestParam Long id,
@@ -171,6 +172,7 @@ public class AdminController {
                                 @RequestParam Long idPedido,
                                 @RequestParam String nuevoEstado,
                                 Model model) {
+
         if (isNotAdmin(session)) return "redirect:/login";
 
         try {
@@ -179,12 +181,24 @@ public class AdminController {
                     es.unex.cum.mdai.motoresbits.data.model.enums.EstadoPedido.valueOf(nuevoEstado)
             );
             return "redirect:/admin/pedidos";
-        } catch (EstadoPedidoInvalidoException ex) {
+
+        } catch (SaldoInsuficienteException | EstadoPedidoInvalidoException ex) {
             model.addAttribute("errorEstado", ex.getMessage());
+            model.addAttribute("pedidos", pedidoService.listarTodosPedidos());
+            return "admin/pedidos";
+
+        } catch (IllegalArgumentException ex) { // por si llega un estado inválido (valueOf)
+            model.addAttribute("errorEstado", "Estado inválido: " + nuevoEstado);
+            model.addAttribute("pedidos", pedidoService.listarTodosPedidos());
+            return "admin/pedidos";
+
+        } catch (Exception ex) { // opcional, pero útil para depurar
+            model.addAttribute("errorEstado", "No se pudo cambiar el estado: " + ex.getMessage());
             model.addAttribute("pedidos", pedidoService.listarTodosPedidos());
             return "admin/pedidos";
         }
     }
+
 
     // ---------- RESEÑAS (moderación) ----------
     @PostMapping("/resena/eliminar/admin")
@@ -268,7 +282,7 @@ public class AdminController {
             return "admin/usuarios";
         }
     }
-
+    // ---------- Gestionar Saldos (ADMIN) ----------
     @GetMapping("/usuarios/saldo")
     public String adminUsuariosSaldo(HttpSession session, Model model) {
         if (isNotAdmin(session)) return "redirect:/";

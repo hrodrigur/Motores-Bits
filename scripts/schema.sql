@@ -100,11 +100,11 @@ INSERT INTO categorias (id_categoria, nombre, descripcion) VALUES
   (4, 'Accesorios', 'Filtros, tornilleria y accesorios varios');
 
 INSERT INTO productos (id_producto, id_categoria, nombre, referencia, precio, stock, version, imagen,imagen_url) VALUES
-(1, 1, 'Motor V8 5.0L', 'MV8-001', 4999.99, 5, 1, 'Motor V8 5.0L.jpg',NULL),
-(2, 2, 'ECU Controlador X100', 'ECU-100', 899.90, 10, 1, 'ECU Controlador X100.jpg',NULL),
-(3, 3, 'Kit Embrague Deportivo', 'KEM-200', 149.99, 20, 1, 'Kit Embrague Deportivo.jpg',NULL),
-(4, 4, 'Filtro de Aceite Premium', 'FA-300', 19.99, 50, 1, 'Filtro de Aceite Premium.jpg',NULL),
-(5, 2, 'Sensor de Oxigeno Bosch', 'SOX-050', 29.50, 30, 1, 'Sensor de Oxigeno Bosch.jpg',NULL);
+(1, 1, 'Motor V8 5.0L', 'MV8-001', 4999.99, 5, 1, 'Motor_V8_5_0L.jpg',NULL),
+(2, 2, 'ECU Controlador X100', 'ECU-100', 899.90, 10, 1, 'ECU_Controlador_X100.jpg',NULL),
+(3, 3, 'Kit Embrague Deportivo', 'KEM-200', 149.99, 20, 1, 'Kit_Embrague_Deportivo.jpg',NULL),
+(4, 4, 'Filtro de Aceite Premium', 'FA-300', 19.99, 50, 1, 'Filtro_de_Aceite_Premium.jpg',NULL),
+(5, 2, 'Sensor de Oxigeno Bosch', 'SOX-050', 29.50, 30, 1, 'Sensor_de_Oxigeno_Bosch.jpg',NULL);
 
 -- Pedido de ejemplo para el cliente (con lineas de pedido)
 INSERT INTO pedidos (id_pedido, id_usuario, fec_pedido, estado, total) VALUES

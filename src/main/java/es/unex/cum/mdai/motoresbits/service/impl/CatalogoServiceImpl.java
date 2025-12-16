@@ -257,13 +257,19 @@ public class CatalogoServiceImpl implements CatalogoService {
 
         for (var p : productos) {
             var dto = new ProductoAdminDto();
-            dto.setId(p.getId());
+            dto.setId(p.getId()); // si tu entidad usa getIdProducto(), cámbialo aquí
             dto.setNombre(p.getNombre());
             dto.setReferencia(p.getReferencia());
             dto.setPrecio(p.getPrecio());
             dto.setStock(p.getStock());
             dto.setNombreCategoria(p.getCategoria() != null ? p.getCategoria().getNombre() : "");
+
+            // ✅ CLAVE: traer también la imagen local
+            dto.setImagen(p.getImagen());
+
+            // ✅ y la url externa
             dto.setImagenUrl(p.getImagenUrl());
+
             result.add(dto);
         }
         return result;
@@ -277,13 +283,19 @@ public class CatalogoServiceImpl implements CatalogoService {
 
         for (var p : productos) {
             var dto = new ProductoAdminDto();
-            dto.setId(p.getId());
+            dto.setId(p.getId()); // si tu entidad usa getIdProducto(), cámbialo aquí
             dto.setNombre(p.getNombre());
             dto.setReferencia(p.getReferencia());
             dto.setPrecio(p.getPrecio());
             dto.setStock(p.getStock());
             dto.setNombreCategoria(p.getCategoria() != null ? p.getCategoria().getNombre() : "");
+
+            // ✅ CLAVE: traer también la imagen local
+            dto.setImagen(p.getImagen());
+
+            // ✅ y la url externa
             dto.setImagenUrl(p.getImagenUrl());
+
             result.add(dto);
         }
         return result;

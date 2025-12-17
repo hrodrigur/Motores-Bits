@@ -20,7 +20,7 @@ public class DatabaseInitializer implements CommandLineRunner {
     private final DataSource dataSource;
     private final JdbcTemplate jdbcTemplate;
 
-    /**
+    /*
      * Ruta del script SQL que inicializa la BD.
      * Por defecto: "scripts/schema.sql" relativa al directorio desde el que arrancas la app.
      * Puedes sobreescribirla en application.properties con:

@@ -14,15 +14,7 @@ import es.unex.cum.mdai.motoresbits.data.repository.ProductoRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
-/**
- * Tests para repositorios `Producto` y `Categoria`.
- *
- * Objetivo:
- * - Verificar la creación de categorías y el listado de productos por categoría.
- * - Validar la restricción de unicidad en la referencia de producto.
- *
- * Cada test es autocontenido y persistente en la BBDD de pruebas (profil `test`).
- */
+// Pruebas de repositorios: Producto y categorías (listado y unicidad).
 class ProductosCategoriasRepositoryTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
@@ -47,7 +39,7 @@ class ProductosCategoriasRepositoryTest extends BaseJpaTest {
 
         var p2 = new Producto();
         p2.setNombre("Otro");
-        p2.setReferencia(p1.getReferencia()); // duplicada intencionadamente
+        p2.setReferencia(p1.getReferencia());
         p2.setPrecio(new BigDecimal("9.99"));
         p2.setStock(10);
         p2.setCategoria(cat);

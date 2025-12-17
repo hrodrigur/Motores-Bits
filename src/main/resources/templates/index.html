@@ -1,3 +1,4 @@
+<!-- Plantilla: index.html — Vista principal del catálogo. Modelo esperado: categorias, productos -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
@@ -56,11 +57,9 @@
                 <div class="card-body">
                     <h5 th:text="${p.nombre}"></h5>
 
-                    <!-- precio negro -->
                     <p class="fw-bold text-dark" th:text="${p.precio} + ' €'"></p>
 
                     <div class="d-flex gap-2">
-                        <!-- ✅ Ver por REFERENCIA -->
                         <a th:href="@{/producto/{ref}(ref=${p.referencia})}"
                            class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye"></i>

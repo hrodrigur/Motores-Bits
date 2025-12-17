@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+// Controlador para operaciones de carrito y pedidos: ver, agregar, eliminar y confirmar pedidos.
 @Controller
 public class PedidoController {
 
@@ -58,7 +59,6 @@ public class PedidoController {
             return "carrito";
         }
 
-        // Pedido temporal solo para pintar
         Pedido temp = new Pedido();
         for (Map.Entry<Long, Integer> e : cart.entrySet()) {
             Producto p = catalogoService.obtenerProducto(e.getKey());
@@ -81,7 +81,6 @@ public class PedidoController {
         return "carrito";
     }
 
-    // ✅ PARA EL BOTÓN/CARRITO EN EL CATÁLOGO: NO te manda al producto, te manda al carrito
     @PostMapping("/carrito/agregar")
     public String agregarAlCarrito(@RequestParam Long idProducto,
                                    @RequestParam int cantidad,
@@ -89,7 +88,6 @@ public class PedidoController {
         return agregarInterno(idProducto, cantidad, session, "redirect:/carrito");
     }
 
-    // ✅ PARA EL BOTÓN "Añadir al carrito" EN EL DETALLE: te devuelve al producto
     @PostMapping("/carrito/anadir")
     public String anadirDesdeDetalle(@RequestParam Long idProducto,
                                      @RequestParam int cantidad,
@@ -117,7 +115,6 @@ public class PedidoController {
             session.setAttribute("cartMsg", "La cantidad solicitada se ha ajustado al stock disponible: " + available);
         }
 
-        // si no hay stock, no lo metemos
         if (requestedTotal <= 0) {
             cart.remove(idProducto);
         } else {
@@ -170,7 +167,6 @@ public class PedidoController {
 
         Long nuevoId = null;
         try {
-            // ✅ crear pedido SOLO aquí
             var nuevo = pedidoService.crearPedido(usuarioId);
             nuevoId = nuevo.getId();
 
@@ -178,15 +174,12 @@ public class PedidoController {
                 pedidoService.agregarLinea(nuevoId, e.getKey(), e.getValue());
             }
 
-            // ✅ confirma = paga si hay saldo + stock
             Pedido pedidoConfirmado = pedidoService.confirmarPedido(nuevoId);
 
-            // saldo actualizado en sesión (header)
             if (pedidoConfirmado.getUsuario() != null && pedidoConfirmado.getUsuario().getSaldo() != null) {
                 session.setAttribute("usuarioSaldo", pedidoConfirmado.getUsuario().getSaldo());
             }
 
-            // ✅ vaciar carrito al éxito
             session.removeAttribute("cartItems");
             session.setAttribute("pedidoCantidad", 0);
 
@@ -194,7 +187,6 @@ public class PedidoController {
             return "redirect:/carrito";
 
         } catch (SaldoInsuficienteException | StockInsuficienteException ex) {
-            // borramos el pedido “a medias”
             try { if (nuevoId != null) pedidoService.eliminarPedido(nuevoId); } catch (Exception ignore) {}
 
             session.setAttribute("carritoError", ex.getMessage());

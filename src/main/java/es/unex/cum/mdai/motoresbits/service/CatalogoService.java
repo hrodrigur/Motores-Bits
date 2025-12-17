@@ -7,20 +7,18 @@ import es.unex.cum.mdai.motoresbits.service.dto.ProductoAdminDto;
 import java.math.BigDecimal;
 import java.util.List;
 
+// Servicio de catálogo: gestión de categorías y productos.
 public interface CatalogoService {
 
-    // ---- CATEGORÍAS ----
     Categoria crearCategoria(String nombre, String descripcion);
     Categoria editarCategoria(Long id, String nombre, String descripcion);
     Categoria obtenerCategoria(Long id);
-
 
     Categoria obtenerCategoriaPorNombre(String nombre);
 
     List<Categoria> listarCategorias();
     void eliminarCategoria(Long id);
 
-    // ---- PRODUCTOS ----
     Producto crearProducto(Long idCategoria, String nombre, String referencia,
                            BigDecimal precio, Integer stock, String imagenUrl);
 
@@ -28,7 +26,6 @@ public interface CatalogoService {
                             BigDecimal precio, Integer stock, String imagenUrl);
 
     Producto obtenerProducto(Long id);
-
 
     Producto obtenerProductoPorReferencia(String referencia);
 

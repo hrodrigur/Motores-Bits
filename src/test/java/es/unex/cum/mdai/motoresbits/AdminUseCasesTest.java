@@ -21,12 +21,6 @@ import es.unex.cum.mdai.motoresbits.data.repository.UsuarioRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
-/**
- * Casos de uso del rol ADMIN: pruebas que verifican flujos típicos del
- * administrador (gestión de categorías, productos, pedidos y moderación de reseñas).
- *
- * Cada test está autocontenido y usa la factory de test para crear datos.
- */
 class AdminUseCasesTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
@@ -35,8 +29,6 @@ class AdminUseCasesTest extends BaseJpaTest {
     @Autowired PedidoRepository pedidoRepo;
     @Autowired UsuarioRepository usuarioRepo;
     @Autowired ResenaRepository resenaRepo;
-
-    // ---------------------------- Categoría -----------------------------
 
     @Test
     void categoria_crud_basico() {
@@ -56,8 +48,6 @@ class AdminUseCasesTest extends BaseJpaTest {
         categoriaRepo.flush();
         assertThat(categoriaRepo.findById(cat.getId())).isEmpty();
     }
-
-    // ---------------------------- Producto ------------------------------
 
     @Test
     void producto_crud_y_listado_por_categoria() {
@@ -87,8 +77,6 @@ class AdminUseCasesTest extends BaseJpaTest {
         assertThat(productoRepo.findById(p.getId())).isEmpty();
     }
 
-    // ---------------------------- Pedido --------------------------------
-
     @Test
     void pedido_maestro_detalle_con_lineas_y_productos() {
         var u = f.newUsuarioPersisted();
@@ -115,8 +103,6 @@ class AdminUseCasesTest extends BaseJpaTest {
         });
     }
 
-    // ---------------------------- Estados pedido ------------------------
-
     @Test
     void pedido_actualizar_estado() {
         var u = f.newUsuarioPersisted();
@@ -142,8 +128,6 @@ class AdminUseCasesTest extends BaseJpaTest {
         assertThat(pedidoRepo.findById(pedido.getId()).orElseThrow().getEstado())
                 .isEqualTo(EstadoPedido.ENTREGADO);
     }
-
-    // ---------------------------- Reseñas --------------------------------
 
     @Test
     void moderar_resenas_editar_y_eliminar() {

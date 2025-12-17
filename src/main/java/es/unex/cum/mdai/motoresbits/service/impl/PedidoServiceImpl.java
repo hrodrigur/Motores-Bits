@@ -142,7 +142,7 @@ public class PedidoServiceImpl implements PedidoService {
                 .orElseThrow(() -> new UsuarioNoEncontradoException(usuarioId));
 
         BigDecimal saldoActual = usuarioDB.getSaldo() != null ? usuarioDB.getSaldo() : BigDecimal.ZERO;
-        // 🔴 COBRO: entra a PAGADO
+        // Cobro: entra a PAGADO
         if (actual != EstadoPedido.PAGADO && nuevoEstado == EstadoPedido.PAGADO) {
             if (saldoActual.compareTo(total) < 0) {
                 throw new SaldoInsuficienteException(saldoActual, total);
@@ -151,14 +151,14 @@ public class PedidoServiceImpl implements PedidoService {
             usuarioRepository.save(usuarioDB);
             usuarioRepository.flush();
         }
-        // ✅ DEVOLVER DINERO
+        // Devolver dinero si se cancela desde PAGADO
         if (actual == EstadoPedido.PAGADO && nuevoEstado == EstadoPedido.CANCELADO) {
             usuarioDB.setSaldo(saldoActual.add(total));
             usuarioRepository.save(usuarioDB);
             usuarioRepository.flush();
         }
 
-        // ✅ DEVOLVER STOCK (tu lógica)
+        // Reponer stock al cancelar cuando procede
         if (nuevoEstado == EstadoPedido.CANCELADO &&
                 (actual == EstadoPedido.PENDIENTE || actual == EstadoPedido.PAGADO)) {
             if (pedido.getDetalles() != null) {
@@ -182,9 +182,7 @@ public class PedidoServiceImpl implements PedidoService {
         pedidoRepository.delete(pedido);
     }
 
-    /**
-     * ✅ Confirmar = comprobar stock + saldo, descontar ambos y dejar pedido en PAGADO.
-     */
+    // Confirmar pedido: comprobar stock y saldo, descontar y dejar en estado PAGADO.
     @Override
     public Pedido confirmarPedido(Long idPedido) {
         final int MAX_RETRIES = 3;
@@ -242,7 +240,7 @@ public class PedidoServiceImpl implements PedidoService {
                 usuarioRepository.save(usuario);
                 usuarioRepository.flush();
 
-                // ✅ marcar pagado
+                // marcar pagado
                 pedido.setEstado(EstadoPedido.PAGADO);
                 pedido.setTotal(total);
                 pedido.setUsuario(usuario);

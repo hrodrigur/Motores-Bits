@@ -17,13 +17,7 @@ import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 import jakarta.validation.ConstraintViolationException;
 
-/**
- * Pruebas para el repositorio de reseñas (`Resena`).
- * Validaciones cubiertas:
- * - creación y búsqueda por producto
- * - rango de puntuación (1..5) mediante ConstraintViolation
- * - cálculo de la media de puntuaciones
- */
+// Tests del repositorio de reseñas: creación, validaciones y agregados.
 class ResenasRepositoryTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
@@ -45,7 +39,6 @@ class ResenasRepositoryTest extends BaseJpaTest {
 
         var resenas = resenaRepo.findByProductoId(p.getId());
         assertThat(resenas).hasSize(1);
-        // Comprobamos que la lista contiene una reseña cuyo email de usuario coincide
         assertThat(resenas).extracting(res -> res.getUsuario().getEmail()).contains(u.getEmail());
     }
 
@@ -58,7 +51,7 @@ class ResenasRepositoryTest extends BaseJpaTest {
         var rInv = new Resena();
         rInv.setUsuario(u);
         rInv.setProducto(p);
-        rInv.setPuntuacion(6); // inválida
+        rInv.setPuntuacion(6);
         rInv.setComentario("exceso");
 
         assertThatThrownBy(() -> resenaRepo.saveAndFlush(rInv))
@@ -74,7 +67,7 @@ class ResenasRepositoryTest extends BaseJpaTest {
         var rInv = new Resena();
         rInv.setUsuario(u);
         rInv.setProducto(p);
-        rInv.setPuntuacion(0); // inválida: por debajo del rango 1..5
+        rInv.setPuntuacion(0);
         rInv.setComentario("muy bajo");
 
         assertThatThrownBy(() -> resenaRepo.saveAndFlush(rInv))
@@ -97,7 +90,6 @@ class ResenasRepositoryTest extends BaseJpaTest {
         assertThat(media).isCloseTo(4.0, org.assertj.core.data.Offset.offset(1e-4));
     }
 
-    // helper
     private Resena nuevaResena(Usuario u, Producto p, int puntuacion) {
         var r = new Resena();
         r.setUsuario(u);

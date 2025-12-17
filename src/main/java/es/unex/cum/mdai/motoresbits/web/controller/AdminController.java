@@ -1,6 +1,5 @@
 package es.unex.cum.mdai.motoresbits.web.controller;
 
-import es.unex.cum.mdai.motoresbits.data.model.entity.Usuario;
 import es.unex.cum.mdai.motoresbits.service.CatalogoService;
 import es.unex.cum.mdai.motoresbits.service.PedidoService;
 import es.unex.cum.mdai.motoresbits.service.ResenaService;
@@ -17,6 +16,7 @@ import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import es.unex.cum.mdai.motoresbits.data.model.enums.RolUsuario;
 
+// Controlador de administración: gestión de categorías, productos, pedidos, reseñas y usuarios.
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -38,7 +38,6 @@ public class AdminController {
         return r == null || !"ADMIN".equals(r.toString());
     }
 
-    // ---------- CATEGORÍAS ----------
     @GetMapping("/categorias")
     public String listarCategorias(HttpSession session, Model model) {
         if (isNotAdmin(session)) return "redirect:/login";
@@ -85,7 +84,6 @@ public class AdminController {
         return "redirect:/admin/categorias";
     }
 
-    // ---------- PRODUCTOS ----------
     @GetMapping("/productos")
     public String listarProductos(HttpSession session, Model model, @RequestParam(required = false) Long categoriaId) {
         if (isNotAdmin(session)) return "redirect:/login";
@@ -109,7 +107,6 @@ public class AdminController {
         return "admin/productos";
     }
 
-    // ✅ MODIFICADO: ahora acepta imagenUrl
     @PostMapping("/productos/crear")
     public String crearProducto(HttpSession session,
                                 @RequestParam Long idCategoria,
@@ -159,7 +156,6 @@ public class AdminController {
         return "redirect:/admin/productos";
     }
 
-    // ---------- PEDIDOS ----------
     @GetMapping("/pedidos")
     public String listarPedidos(HttpSession session, Model model) {
         if (isNotAdmin(session)) return "redirect:/login";
@@ -187,20 +183,18 @@ public class AdminController {
             model.addAttribute("pedidos", pedidoService.listarTodosPedidos());
             return "admin/pedidos";
 
-        } catch (IllegalArgumentException ex) { // por si llega un estado inválido (valueOf)
+        } catch (IllegalArgumentException ex) {
             model.addAttribute("errorEstado", "Estado inválido: " + nuevoEstado);
             model.addAttribute("pedidos", pedidoService.listarTodosPedidos());
             return "admin/pedidos";
 
-        } catch (Exception ex) { // opcional, pero útil para depurar
+        } catch (Exception ex) {
             model.addAttribute("errorEstado", "No se pudo cambiar el estado: " + ex.getMessage());
             model.addAttribute("pedidos", pedidoService.listarTodosPedidos());
             return "admin/pedidos";
         }
     }
 
-
-    // ---------- RESEÑAS (moderación) ----------
     @PostMapping("/resena/eliminar/admin")
     public String eliminarResenaAdmin(HttpSession session, @RequestParam Long idResena, jakarta.servlet.http.HttpServletRequest request) {
         if (isNotAdmin(session)) return "redirect:/login";
@@ -213,7 +207,6 @@ public class AdminController {
         return "redirect:/admin/pedidos";
     }
 
-    // Admin root - panel principal (responde a /admin y /admin/)
     @GetMapping({"","/"})
     public String adminIndex(HttpSession session, Model model) {
         if (isNotAdmin(session)) return "redirect:/login";
@@ -223,7 +216,6 @@ public class AdminController {
         return "admin/index";
     }
 
-    // ---------- Usuarios ----------
     @GetMapping("/usuario/{id}")
     public String verCliente(@PathVariable Long id, HttpSession session, Model model) {
         if (isNotAdmin(session)) return "redirect:/login";
@@ -255,7 +247,6 @@ public class AdminController {
         }
     }
 
-    // ---------- USUARIOS (ADMIN) ----------
     @GetMapping("/usuarios")
     public String listarUsuarios(HttpSession session, Model model) {
         if (isNotAdmin(session)) return "redirect:/login";
@@ -282,7 +273,7 @@ public class AdminController {
             return "admin/usuarios";
         }
     }
-    // ---------- Gestionar Saldos (ADMIN) ----------
+
     @GetMapping("/usuarios/saldo")
     public String adminUsuariosSaldo(HttpSession session, Model model) {
         if (isNotAdmin(session)) return "redirect:/";

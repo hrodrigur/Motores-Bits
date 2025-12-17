@@ -16,15 +16,16 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+// Implementación del servicio de usuarios: registro, login, búsqueda y ajuste de saldo.
 @Service
 @Transactional
-public class UsuarioServiceImpl implements UsuarioService {
+public class UsuarioServicioImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PedidoRepository pedidoRepository;
     private final ResenaRepository resenaRepository;
 
-    public UsuarioServiceImpl(UsuarioRepository usuarioRepository,
+    public UsuarioServicioImpl(UsuarioRepository usuarioRepository,
                               PedidoRepository pedidoRepository,
                               ResenaRepository resenaRepository) {
         this.usuarioRepository = usuarioRepository;

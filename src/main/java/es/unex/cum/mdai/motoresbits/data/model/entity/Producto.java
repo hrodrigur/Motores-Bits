@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.Set;
-
+// Entidad Producto: datos básicos y relación con detalles de pedido.
 @Entity
 @Table(name = "PRODUCTOS", uniqueConstraints = {
         @UniqueConstraint(name = "uk_producto_referencia", columnNames = "referencia")

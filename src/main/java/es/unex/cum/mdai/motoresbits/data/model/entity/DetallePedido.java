@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+// Entidad DetallePedido: línea individual dentro de un pedido (PK compuesta).
 @Entity
 @Table(name = "DETALLES_PEDIDO")
 public class DetallePedido implements Serializable {
@@ -38,7 +39,7 @@ public class DetallePedido implements Serializable {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    /** Sincroniza relaciones y la PK compuesta. No añade a colecciones. */
+    // Sincroniza relaciones y la PK compuesta. No añade a colecciones.
     public void attach(Pedido p, Producto pr) {
         this.pedido = p;
         this.producto = pr;

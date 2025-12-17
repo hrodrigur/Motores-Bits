@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+// Implementación del servicio de reseñas: crear, editar, listar y eliminar reseñas.
 @Service
 @Transactional
 public class ResenaServiceImpl implements ResenaService {

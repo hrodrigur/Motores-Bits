@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// Pruebas de integración para ResenaService: crear, editar, listar y eliminar reseñas.
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
@@ -124,7 +125,6 @@ class ResenaServiceIT {
         assertEquals(2, editada.getPuntuacion());
         assertEquals("Regular", editada.getComentario());
 
-        // comprobar persistencia
         Resena desdeRepo = resenaRepository.findById(r.getId()).orElseThrow();
         assertEquals(2, desdeRepo.getPuntuacion());
         assertEquals("Regular", desdeRepo.getComentario());
@@ -182,7 +182,6 @@ class ResenaServiceIT {
     @Test
     @DisplayName("crearResena con usuario o producto inexistente lanza IllegalArgumentException")
     void crearResena_entidadesNoExisten() {
-        // crear categoria/ producto parcial para usar ids inexistentes
         Usuario u = crearUsuario("exists@example.com");
         Categoria c = crearCategoria("CatX");
         Producto p = crearProducto(c, "REF-X");

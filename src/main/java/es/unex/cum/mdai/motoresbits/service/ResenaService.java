@@ -5,6 +5,7 @@ import es.unex.cum.mdai.motoresbits.data.model.entity.Resena;
 import java.util.List;
 import java.util.Optional;
 
+// Servicio para gestionar reseñas: crear, editar, listar y eliminar.
 public interface ResenaService {
 
     Resena crearResena(Long idUsuario, Long idProducto, Integer puntuacion, String comentario);

@@ -29,12 +29,7 @@ import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 import jakarta.validation.ConstraintViolationException;
 import org.assertj.core.data.Offset;
 
-/**
- * Pruebas de humo generales que cubren los flujos más importantes: registro/login,
- * operaciones CRUD y validaciones.
- *
- * Estos tests ayudan a detectar regresiones en persistencia y restricciones.
- */
+// Pruebas de humo: flujos principales de la aplicación.
 class GeneralSmokeTests extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
@@ -45,8 +40,6 @@ class GeneralSmokeTests extends BaseJpaTest {
     @Autowired PedidoRepository pedidoRepo;
     @Autowired DetallePedidoRepository detalleRepo;
     @Autowired ResenaRepository resenaRepo;
-
-    // --------------------------- Usuarios --------------------------------
 
     @Test
     void usuario_registroLogin_y_unicidadEmail() {
@@ -71,8 +64,6 @@ class GeneralSmokeTests extends BaseJpaTest {
         assertThatThrownBy(() -> usuarioRepo.saveAndFlush(duplicado))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
-
-    // ------------------------- Categorías / Productos ---------------------
 
     @Test
     void productos_porCategoria_y_unicidadReferencia() {
@@ -105,8 +96,6 @@ class GeneralSmokeTests extends BaseJpaTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    // ---------------------------- Reseñas --------------------------------
-
     @Test
     void resenas_crear_listarYMedia() {
         var u1 = f.newUsuarioPersisted();
@@ -135,6 +124,7 @@ class GeneralSmokeTests extends BaseJpaTest {
         var media = resenaRepo.avgPuntuacionByProductoId(prod.getId()).orElseThrow();
         assertThat(media).isCloseTo(4.0, Offset.offset(1e-4));
     }
+
     @Test
     void resenas_puntuacionInvalida_lanzaConstraintViolation() {
         var u = f.newUsuarioPersisted();
@@ -144,15 +134,12 @@ class GeneralSmokeTests extends BaseJpaTest {
         var rInv = new Resena();
         rInv.setUsuario(u);
         rInv.setProducto(prod);
-        rInv.setPuntuacion(6); // inválida
+        rInv.setPuntuacion(6);
         rInv.setComentario("exceso");
 
         assertThatThrownBy(() -> resenaRepo.saveAndFlush(rInv))
                 .isInstanceOf(ConstraintViolationException.class);
     }
-
-
-    // ---------------------------- Pedidos --------------------------------
 
     @Test
     void pedidos_checkout_joinFetch_y_orphanRemoval() {

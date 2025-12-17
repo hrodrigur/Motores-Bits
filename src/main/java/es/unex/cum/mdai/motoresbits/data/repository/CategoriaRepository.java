@@ -7,6 +7,5 @@ import java.util.Optional;
 
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
-    // ✅ Para /categoria/{nombre}
     Optional<Categoria> findByNombreIgnoreCase(String nombre);
 }

@@ -1,3 +1,4 @@
+<!-- Motores-Bits — Repositorio de ejemplo para la asignatura: tienda online con monedero, pedidos y facturación PDF -->
 # Motores&Bits
 ---
 

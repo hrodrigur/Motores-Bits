@@ -50,8 +50,6 @@ class PedidoServiceIT {
     @Autowired
     private CategoriaRepository categoriaRepository;
 
-    // ---------- helpers ----------
-
     private String emailUnico(String prefijo) {
         return prefijo + "_" + UUID.randomUUID() + "@example.com";
     }
@@ -62,7 +60,6 @@ class PedidoServiceIT {
         u.setEmail(email);
         u.setContrasena("1234");
         u.setRol(RolUsuario.CLIENTE);
-        // saldo por defecto null/0 en tu lógica, lo setean los tests cuando lo necesitan
         return usuarioRepository.save(u);
     }
 
@@ -80,8 +77,6 @@ class PedidoServiceIT {
         p.setStock(100);
         return productoRepository.save(p);
     }
-
-    // ---------- CREAR / OBTENER ----------
 
     @Test
     @DisplayName("crearPedido debe crear un pedido CREADO con total 0 para un usuario existente")
@@ -135,8 +130,6 @@ class PedidoServiceIT {
         assertThrows(PedidoNoEncontradoException.class,
                 () -> pedidoService.obtenerPedido(9999L));
     }
-
-    // ---------- AGREGAR / CAMBIAR / ELIMINAR LÍNEAS (sin cambios) ----------
 
     @Test
     @DisplayName("agregarLinea debe crear una línea nueva y actualizar el total")
@@ -261,8 +254,6 @@ class PedidoServiceIT {
                 () -> pedidoService.eliminarLinea(pedido.getId(), p.getId()));
     }
 
-    // ---------- CAMBIAR ESTADO (ajustado a TU validador) ----------
-
     @Test
     @DisplayName("cambiarEstado debe permitir transiciones válidas (CREADO->PENDIENTE->PAGADO->ENVIADO->ENTREGADO)")
     void cambiarEstado_transicionesValidas() {
@@ -290,16 +281,13 @@ class PedidoServiceIT {
 
         Long id = pedido.getId();
 
-        // ✅ según tu validador: CREADO -> ENVIADO es inválido
         assertThrows(EstadoPedidoInvalidoException.class,
                 () -> pedidoService.cambiarEstado(id, EstadoPedido.ENVIADO));
 
-        // Llevamos el pedido a ENVIADO de forma válida: CREADO->PENDIENTE->PAGADO->ENVIADO
         pedidoService.cambiarEstado(id, EstadoPedido.PENDIENTE);
         pedidoService.cambiarEstado(id, EstadoPedido.PAGADO);
         pedidoService.cambiarEstado(id, EstadoPedido.ENVIADO);
 
-        // ✅ ENVIADO -> CANCELADO es inválido
         assertThrows(EstadoPedidoInvalidoException.class,
                 () -> pedidoService.cambiarEstado(id, EstadoPedido.CANCELADO));
     }
@@ -319,8 +307,6 @@ class PedidoServiceIT {
         assertThrows(EstadoPedidoInvalidoException.class,
                 () -> pedidoService.cambiarEstado(id, EstadoPedido.CREADO));
     }
-
-    // ---------- ELIMINAR PEDIDO ----------
 
     @Test
     @DisplayName("eliminarPedido debe borrar el pedido y sus líneas")
@@ -360,13 +346,10 @@ class PedidoServiceIT {
                 () -> pedidoService.eliminarPedido(9999L));
     }
 
-    // ---------- CHECKOUT / STOCK / SALDO (ajustado a TU lógica) ----------
-
     @Test
     @DisplayName("checkout debe descontar stock al confirmar y reponerlo al cancelar")
     void checkout_descuentaStock_y_reposicion_alCancelar() {
         Usuario u = crearUsuarioCliente(emailUnico("stock_user"));
-        // ✅ necesario: confirmarPedido valida saldo antes que stock
         u.setSaldo(new BigDecimal("100.00"));
         usuarioRepository.saveAndFlush(u);
 
@@ -377,14 +360,12 @@ class PedidoServiceIT {
         Pedido pedido = pedidoService.crearPedido(u.getId());
         pedido = pedidoService.agregarLinea(pedido.getId(), p.getId(), 2);
 
-        // ✅ según tu impl: confirmarPedido deja el pedido en PAGADO
         Pedido confirmado = pedidoService.confirmarPedido(pedido.getId());
         assertEquals(EstadoPedido.PAGADO, confirmado.getEstado());
 
         Producto afterConfirm = productoRepository.findById(p.getId()).orElseThrow();
         assertEquals(0, afterConfirm.getStock());
 
-        // cancelar desde PAGADO => debe reponer stock
         Pedido cancelado = pedidoService.cambiarEstado(pedido.getId(), EstadoPedido.CANCELADO);
         assertEquals(EstadoPedido.CANCELADO, cancelado.getEstado());
 
@@ -396,7 +377,6 @@ class PedidoServiceIT {
     @DisplayName("confirmarPedido debe lanzar StockInsuficienteException si no hay stock suficiente")
     void confirmarPedido_stockInsuficiente_lanzaExcepcion() {
         Usuario u = crearUsuarioCliente(emailUnico("stockfail_user"));
-        // ✅ importante: que NO falle por saldo antes
         u.setSaldo(new BigDecimal("1000.00"));
         usuarioRepository.saveAndFlush(u);
 
@@ -413,16 +393,7 @@ class PedidoServiceIT {
                 () -> pedidoService.confirmarPedido(pedidoId));
     }
 
-
-    // ---------- PARAMETRIZADO CON MOCKS (arreglado) ----------
-
     private static Stream<Object[]> invalidTransitionsProvider() {
-        // ✅ según tu validarTransicionEstado:
-        // CREADO: inválido -> ENVIADO, ENTREGADO
-        // PENDIENTE: inválido -> ENVIADO (y otros no permitidos)
-        // PAGADO: inválido -> PENDIENTE
-        // ENVIADO: inválido -> CANCELADO
-        // ENTREGADO/CANCELADO: cualquier cambio inválido
         return Stream.of(
                 new Object[]{EstadoPedido.CREADO, EstadoPedido.ENVIADO},
                 new Object[]{EstadoPedido.CREADO, EstadoPedido.ENTREGADO},
@@ -450,14 +421,11 @@ class PedidoServiceIT {
         p.setId(999L);
         p.setEstado(actual);
 
-        // ✅ cambiarEstado usa findConLineasYProductos, no findById
         when(pedidoRepoMock.findConLineasYProductos(999L)).thenReturn(java.util.Optional.of(p));
 
         assertThrows(EstadoPedidoInvalidoException.class,
                 () -> service.cambiarEstado(999L, nuevo));
     }
-
-    // ---------- CONCURRENCIA (arreglado: saldo) ----------
 
     @Test
     @DisplayName("concurrencia_confirmarPedidos_noSobrevender")
@@ -479,7 +447,6 @@ class PedidoServiceIT {
 
         Usuario u1 = crearUsuarioCliente(emailUnico("c1"));
         Usuario u2 = crearUsuarioCliente(emailUnico("c2"));
-        // ✅ ambos con saldo suficiente (si no, success = 0)
         u1.setSaldo(new BigDecimal("100.00"));
         u2.setSaldo(new BigDecimal("100.00"));
         usuarioRepository.saveAndFlush(u1);
@@ -491,6 +458,7 @@ class PedidoServiceIT {
         pedidoService.agregarLinea(ped1.getId(), prod.getId(), 1);
         pedidoService.agregarLinea(ped2.getId(), prod.getId(), 1);
 
+        @SuppressWarnings("resource")
         ExecutorService ex = Executors.newFixedThreadPool(2);
         try {
             CountDownLatch start = new CountDownLatch(1);
@@ -504,7 +472,7 @@ class PedidoServiceIT {
                         pedidoService.confirmarPedido(ped1.getId());
                         success.incrementAndGet();
                     } catch (StockInsuficienteException e) {
-                        // esperado para uno
+                        // Se espera StockInsuficiente para uno de los hilos en casos de concurrencia
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -520,7 +488,7 @@ class PedidoServiceIT {
                         pedidoService.confirmarPedido(ped2.getId());
                         success.incrementAndGet();
                     } catch (StockInsuficienteException e) {
-                        // esperado para uno
+                        // Se espera StockInsuficiente para uno de los hilos en casos de concurrencia
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

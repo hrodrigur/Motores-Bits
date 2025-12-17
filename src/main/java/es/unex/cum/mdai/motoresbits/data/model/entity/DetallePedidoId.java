@@ -5,6 +5,7 @@ import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
 
+// Identificador embebido para DetallePedido (PK compuesta: pedidoId + productoId)
 @Embeddable
 public class DetallePedidoId implements Serializable {
 

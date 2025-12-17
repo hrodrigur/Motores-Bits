@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+// Controlador para la vista principal (home) que carga categorias y productos.
 @Controller
 public class HomeController {
 
@@ -16,7 +17,6 @@ public class HomeController {
 
     @GetMapping("/")
     public String index(Model model) {
-        // Mostrar la página de inicio (index) independientemente de la sesión
         model.addAttribute("categorias", catalogoService.listarCategorias());
         model.addAttribute("productos", catalogoService.listarProductos());
         return "index";

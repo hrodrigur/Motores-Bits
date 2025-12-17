@@ -3,6 +3,7 @@ package es.unex.cum.mdai.motoresbits.data.model.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+// Entidad Resena: reseñas de productos por usuarios con puntuación y comentario.
 @Entity
 @Table(name = "RESENAS")
 public class Resena {

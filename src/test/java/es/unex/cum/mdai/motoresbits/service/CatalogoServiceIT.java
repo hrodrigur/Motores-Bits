@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// Pruebas de integración para CatalogoService: categorías, productos y comportamientos asociados.
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
@@ -54,8 +55,6 @@ class CatalogoServiceIT {
     @Autowired
     private PedidoRepository pedidoRepository;
 
-    // ---------- helpers ----------
-
     private Categoria crearCategoria(String nombre) {
         return catalogoService.crearCategoria(nombre, "Descripción de " + nombre);
     }
@@ -77,8 +76,6 @@ class CatalogoServiceIT {
     private String emailUnico(String prefijo) {
         return prefijo + "_" + UUID.randomUUID() + "@example.com";
     }
-
-    // ---------- CATEGORÍAS ----------
 
     @Test
     @DisplayName("crearCategoria debe guardar la categoría con nombre y descripción")
@@ -166,7 +163,7 @@ class CatalogoServiceIT {
         try {
             catalogoService.eliminarCategoria(9999L);
         } catch (CategoriaNoEncontradaException ex) {
-            // también válido
+
         }
     }
 
@@ -178,15 +175,11 @@ class CatalogoServiceIT {
 
         try {
             catalogoService.eliminarCategoria(cat.getId());
-            // Si NO lanza, asumimos que borró en cascada:
             assertFalse(categoriaRepository.findById(cat.getId()).isPresent());
             assertFalse(productoRepository.findById(p.getId()).isPresent());
         } catch (es.unex.cum.mdai.motoresbits.service.exception.CategoriaConProductosException ex) {
-            // también válido: tu servicio puede bloquear el borrado
         }
     }
-
-    // ---------- PRODUCTOS ----------
 
     @Test
     @DisplayName("crearProducto debe crear un producto en la categoría indicada")
@@ -396,7 +389,6 @@ class CatalogoServiceIT {
 
         try {
             catalogoService.eliminarProducto(p.getId());
-            // si no lanza, debe haberse borrado el producto (y normalmente también las reseñas)
             assertFalse(productoRepository.findById(p.getId()).isPresent());
         } catch (ProductoConDependenciasException ex) {
             // válido si tu impl bloquea el borrado
@@ -451,32 +443,5 @@ class CatalogoServiceIT {
                     null
             );
         });
-    }
-
-    @Test
-    @DisplayName("eliminarProducto con reseña asociada: puede lanzar o borrar en cascada según implementación")
-    void eliminarProducto_conResena_comportamientoFlexible() {
-        Categoria cat = crearCategoria("CatRes");
-        Producto p = crearProductoEnCategoria(cat, "REF-RES-1", new BigDecimal("5.00"), 10);
-
-        Usuario u = new Usuario();
-        u.setNombre("UsuarioRes");
-        u.setEmail(emailUnico("res"));
-        u.setContrasena("pw");
-        usuarioRepository.save(u);
-
-        Resena r = new Resena();
-        r.setUsuario(u);
-        r.setProducto(p);
-        r.setPuntuacion(4);
-        r.setComentario("buena");
-        resenaRepository.saveAndFlush(r);
-
-        try {
-            catalogoService.eliminarProducto(p.getId());
-            assertFalse(productoRepository.findById(p.getId()).isPresent());
-        } catch (ProductoConDependenciasException ex) {
-            // válido
-        }
     }
 }

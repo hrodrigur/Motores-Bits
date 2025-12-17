@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+// Controlador que gestiona la creación y eliminación de reseñas de productos.
 @Controller
 public class ResenaController {
 
@@ -38,7 +39,6 @@ public class ResenaController {
                     "No se ha podido guardar la reseña.");
         }
 
-        // Volver al detalle del producto
         return "redirect:/producto/" + id;
     }
 
@@ -53,7 +53,6 @@ public class ResenaController {
             var r = resenaService.obtenerResena(idResena);
             Long productoId = r.getProducto() != null ? r.getProducto().getId() : null;
             Long autorId = r.getUsuario() != null ? r.getUsuario().getId() : null;
-            // usuarioId ya está garantizado (no null); comprobar propiedad
             if (!usuarioId.equals(autorId)) {
                 redirectAttributes.addFlashAttribute("resenaError", "No tienes permiso para eliminar esta reseña.");
                 return productoId != null ? "redirect:/producto/" + productoId : "redirect:/";
@@ -64,7 +63,6 @@ public class ResenaController {
             return productoId != null ? "redirect:/producto/" + productoId : "redirect:/";
          } catch (Exception ex) {
              redirectAttributes.addFlashAttribute("resenaError", ex.getMessage());
-             // intentar redirigir al producto asociado cuando sea posible
              try { var r2 = resenaService.obtenerResena(idResena); return r2.getProducto() != null ? "redirect:/producto/" + r2.getProducto().getId() : "redirect:/"; } catch (Exception e) { return "redirect:/"; }
          }
     }

@@ -17,10 +17,7 @@ import es.unex.cum.mdai.motoresbits.data.repository.PedidoRepository;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
-/**
- * Pruebas centradas en el repositorio de `Pedido` y en el manejo de líneas (DetallePedido).
- * Verifica consultas por usuario, operaciones JOIN FETCH y el comportamiento de orphanRemoval.
- */
+// Pruebas del repositorio de pedidos: líneas, joins y transacciones.
 class PedidosRepositoryTest extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
@@ -28,7 +25,6 @@ class PedidosRepositoryTest extends BaseJpaTest {
     @Autowired DetallePedidoRepository detalleRepo;
     @Autowired PlatformTransactionManager txManager;
 
-    // Crear un pedido con una línea y verificar consultas por usuario y por producto.
     @Test
     void crearPedidoConLinea_y_consultarPorUsuarioYProducto() {
         var u = f.newUsuarioPersisted();
@@ -48,7 +44,6 @@ class PedidosRepositoryTest extends BaseJpaTest {
         assertThat(detalle.get().getPrecio()).isEqualByComparingTo("12.50");
     }
 
-    // Verificar método JOIN FETCH que recupera pedido junto con sus líneas y productos.
     @Test
     void joinFetch_pedidoConLineasYProductos() {
         var u = f.newUsuarioPersisted();
@@ -75,7 +70,6 @@ class PedidosRepositoryTest extends BaseJpaTest {
         });
     }
 
-    // Probar orphanRemoval: quitar la línea del pedido debe eliminarla de la BD.
     @Test
     void orphanRemoval_quitarLineaBorraEnBD() {
         var u = f.newUsuarioPersisted();
@@ -86,14 +80,11 @@ class PedidosRepositoryTest extends BaseJpaTest {
         var linea = pedido.addLinea(p1, 1, p1.getPrecio());
         pedidoRepo.saveAndFlush(pedido);
 
-        // Comprobar específicamente las líneas del pedido creado (evita interferencias entre tests)
         var cargado = pedidoRepo.findConLineasYProductos(pedido.getId()).orElseThrow();
         assertThat(cargado.getDetalles()).hasSize(1);
 
         pedido.removeLinea(linea);
         pedidoRepo.saveAndFlush(pedido);
-        // La consulta con LEFT JOIN FETCH devuelve el pedido aunque no tenga detalles;
-        // aquí comprobamos que el pedido sigue existiendo y que sus detalles están vacíos.
         var cargadoDespOpt = pedidoRepo.findConLineasYProductos(pedido.getId());
         assertThat(cargadoDespOpt).isPresent();
         assertThat(cargadoDespOpt.get().getDetalles()).isEmpty();
@@ -105,7 +96,6 @@ class PedidosRepositoryTest extends BaseJpaTest {
         var c = f.newCategoriaPersisted("TestTX");
         var prod = f.newProductoPersisted(c, "TXP", new BigDecimal("5.00"));
 
-        // Usamos TransactionTemplate para crear una transacción independiente que falla
         var tt = new TransactionTemplate(txManager);
         tt.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
@@ -120,14 +110,12 @@ class PedidosRepositoryTest extends BaseJpaTest {
                 pedido.addLinea(prod, 1, prod.getPrecio());
                 pedidoRepo.saveAndFlush(pedido);
 
-                // Forzamos fallo para que la transacción nueva haga rollback
                 throw new RuntimeException("Forzar rollback de la transacción nueva");
             });
         } catch (RuntimeException ex) {
-            // excepción esperada
+            // excepción esperada: se fuerza rollback en la transacción nueva
         }
 
-        // Tras la excepción, la operación en la transacción nueva debe haber sido rollbacked
         var all = pedidoRepo.findByUsuarioId(u.getId());
         assertThat(all).isEmpty();
     }

@@ -10,8 +10,8 @@ public class ProductoAdminDto {
     private Integer stock;
     private String nombreCategoria;
 
-    private String imagen;     // ✅ NUEVO (para imágenes locales)
-    private String imagenUrl;  // ✅ URL externa
+    private String imagen;
+    private String imagenUrl;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

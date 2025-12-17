@@ -264,10 +264,8 @@ public class CatalogoServiceImpl implements CatalogoService {
             dto.setStock(p.getStock());
             dto.setNombreCategoria(p.getCategoria() != null ? p.getCategoria().getNombre() : "");
 
-            // ✅ CLAVE: traer también la imagen local
             dto.setImagen(p.getImagen());
 
-            // ✅ y la url externa
             dto.setImagenUrl(p.getImagenUrl());
 
             result.add(dto);
@@ -290,10 +288,8 @@ public class CatalogoServiceImpl implements CatalogoService {
             dto.setStock(p.getStock());
             dto.setNombreCategoria(p.getCategoria() != null ? p.getCategoria().getNombre() : "");
 
-            // ✅ CLAVE: traer también la imagen local
             dto.setImagen(p.getImagen());
 
-            // ✅ y la url externa
             dto.setImagenUrl(p.getImagenUrl());
 
             result.add(dto);

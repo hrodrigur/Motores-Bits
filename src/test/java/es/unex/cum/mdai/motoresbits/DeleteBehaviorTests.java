@@ -17,9 +17,7 @@ import es.unex.cum.mdai.motoresbits.data.repository.*;
 import es.unex.cum.mdai.motoresbits.support.BaseJpaTest;
 import es.unex.cum.mdai.motoresbits.support.TestDataFactory;
 
-/**
- * Pruebas relacionadas con el comportamiento de borrado entre entidades.
- */
+// Pruebas sobre comportamiento de borrado e integridad referencial entre entidades.
 class DeleteBehaviorTests extends BaseJpaTest {
 
     @Autowired TestDataFactory f;
@@ -29,8 +27,6 @@ class DeleteBehaviorTests extends BaseJpaTest {
     @Autowired PedidoRepository pedidoRepo;
     @Autowired DetallePedidoRepository detalleRepo;
     @Autowired ResenaRepository resenaRepo;
-
-    // ---------------------------- Categorías ----------------------------
 
     @Test
     void borrarCategoria_sinProductos_OK() {
@@ -50,8 +46,6 @@ class DeleteBehaviorTests extends BaseJpaTest {
             categoriaRepo.flush();
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
-
-    // ----------------------------- Productos -----------------------------
 
     @Test
     void borrarProducto_sinDependencias_OK() {
@@ -139,8 +133,6 @@ class DeleteBehaviorTests extends BaseJpaTest {
         }
     }
 
-    // ------------------------------ Usuarios -----------------------------
-
     @Test
     void borrarUsuario_sinDependencias_OK() {
         var u = f.newUsuarioPersisted();
@@ -183,8 +175,6 @@ class DeleteBehaviorTests extends BaseJpaTest {
             usuarioRepo.flush();
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
-
-    // ------------------------------- Pedidos ----------------------------
 
     @Test
     void borrarPedido_borraSusLineas_porCascadeYOrphanRemoval_OK() {

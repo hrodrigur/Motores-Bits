@@ -1,7 +1,6 @@
--- Schema SQL para MotoresBits (moved here to avoid automatic execution by Spring)
--- Ejecuta manualmente con mysql o a traves del contenedor Docker cuando quieras (ver README o scripts/recreate_db.ps1).
+-- scripts/schema.sql — Script de esquema inicial para Motores-Bits (ejecución manual)
+-- DB soportadas: MariaDB/MySQL. Ejecutar con privilegios apropiados en entornos controlados.
 
--- Asegurarse de eliminar tablas previas (orden: hijos primero)
 DROP TABLE IF EXISTS resenas;
 DROP TABLE IF EXISTS detalles_pedido;
 DROP TABLE IF EXISTS pedidos;
@@ -9,7 +8,6 @@ DROP TABLE IF EXISTS productos;
 DROP TABLE IF EXISTS categorias;
 DROP TABLE IF EXISTS usuarios;
 
--- Tabla de usuarios
 CREATE TABLE usuarios (
   id_usuario BIGINT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(255),
@@ -21,14 +19,12 @@ CREATE TABLE usuarios (
   saldo DECIMAL(10,2) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB;
 
--- Categorías
 CREATE TABLE categorias (
   id_categoria BIGINT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(255),
   descripcion TEXT
 ) ENGINE=InnoDB;
 
--- Productos (FK sin nombre explícito)
 CREATE TABLE productos (
   id_producto BIGINT AUTO_INCREMENT PRIMARY KEY,
   id_categoria BIGINT NOT NULL,
@@ -43,7 +39,6 @@ CREATE TABLE productos (
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- Pedidos (FK sin nombre explícito)
 CREATE TABLE pedidos (
   id_pedido BIGINT AUTO_INCREMENT PRIMARY KEY,
   id_usuario BIGINT NOT NULL,
@@ -54,7 +49,6 @@ CREATE TABLE pedidos (
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- Detalles de pedido (PK compuesta, FKs sin nombre explícito)
 CREATE TABLE detalles_pedido (
   id_pedido BIGINT NOT NULL,
   id_producto BIGINT NOT NULL,
@@ -67,7 +61,6 @@ CREATE TABLE detalles_pedido (
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- Reseñas (FKs sin nombre explícito)
 CREATE TABLE resenas (
   id_resena BIGINT AUTO_INCREMENT PRIMARY KEY,
   id_producto BIGINT NOT NULL,
@@ -82,13 +75,11 @@ CREATE TABLE resenas (
   CONSTRAINT chk_puntuacion CHECK (puntuacion >= 1 AND puntuacion <= 5)
 ) ENGINE=InnoDB;
 
--- Índices adicionales
 CREATE INDEX idx_producto_categoria ON productos(id_categoria);
 CREATE INDEX idx_pedido_usuario ON pedidos(id_usuario);
 CREATE INDEX idx_resena_producto ON resenas(id_producto);
 CREATE INDEX idx_resena_usuario ON resenas(id_usuario);
 
--- Datos iniciales (ejemplos coherentes con la temática "Motores & Bits")
 INSERT INTO usuarios (id_usuario, nombre, email, contrasena, rol, direccion, telefono,saldo) VALUES
   (1, 'Admin', 'admin@example.com', 'admin', 'ADMIN', 'C/ Administrador 1', '600000000', 99999.99),
   (2, 'Cliente Ejemplo', 'cliente@example.com', 'cliente123', 'CLIENTE', 'C/ Cliente 2', '600000001', 1500.00);
@@ -106,7 +97,6 @@ INSERT INTO productos (id_producto, id_categoria, nombre, referencia, precio, st
 (4, 4, 'Filtro de Aceite Premium', 'FA-300', 19.99, 50, 1, 'Filtro_de_Aceite_Premium.jpg',NULL),
 (5, 2, 'Sensor de Oxigeno Bosch', 'SOX-050', 29.50, 30, 1, 'Sensor_de_Oxigeno_Bosch.jpg',NULL);
 
--- Pedido de ejemplo para el cliente (con lineas de pedido)
 INSERT INTO pedidos (id_pedido, id_usuario, fec_pedido, estado, total) VALUES
   (1, 2, '2025-11-29', 'PENDIENTE', 5299.97);
 
@@ -114,7 +104,6 @@ INSERT INTO detalles_pedido (id_pedido, id_producto, cantidad, precio) VALUES
   (1, 1, 1, 4999.99),
   (1, 3, 2, 149.99);
 
--- Reseñas de ejemplo
 INSERT INTO resenas (id_resena, id_producto, id_usuario, puntuacion, comentario, creada_en) VALUES
   (1, 1, 2, 5, 'Excelente motor, potente y fiable.', '2025-11-28 10:00:00'),
   (2, 3, 2, 4, 'Buen embrague por el precio.', '2025-11-27 15:30:00');

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// Genera facturas en PDF para pedidos y las devuelve en la respuesta HTTP
 @Controller
 public class FacturaController {
 
@@ -34,10 +35,8 @@ public class FacturaController {
         this.pdfGenerator = pdfGenerator;
     }
 
-    // Genera PDF on-demand y lo devuelve en la respuesta sin tocar la BD
     @GetMapping(value = "/pedidos/{id}/factura", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> generarFactura(@PathVariable Long id, HttpSession session) {
-        // comprobar que la sesión tiene usuario y permiso: propietario o admin
         Long usuarioId = (Long) session.getAttribute("usuarioId");
         Object rol = session.getAttribute("usuarioRol");
         if (usuarioId == null) {
@@ -45,16 +44,13 @@ public class FacturaController {
         }
 
         var pedido = pedidoService.obtenerPedido(id);
-        // permiso: propietario o admin
         boolean esAdmin = rol != null && "ADMIN".equals(rol.toString());
         if (!esAdmin && (pedido.getUsuario() == null || !usuarioId.equals(pedido.getUsuario().getId()))) {
             return ResponseEntity.status(403).build();
         }
 
-        // Preparar contexto Thymeleaf
         Context ctx = new Context();
         ctx.setVariable("pedido", pedido);
-        // Pasar valores primitivos para evitar problemas de LazyInitialization
         if (pedido.getUsuario() != null) {
             ctx.setVariable("clienteNombre", pedido.getUsuario().getNombre());
             ctx.setVariable("clienteEmail", pedido.getUsuario().getEmail());
@@ -65,7 +61,6 @@ public class FacturaController {
             ctx.setVariable("clienteDireccion", "");
         }
 
-        // Preparar lista simple de detalles con subtotal calculado para evitar operaciones BigDecimal en Thymeleaf
         List<Map<String, Object>> simpleDetalles = new ArrayList<>();
         if (pedido.getDetalles() != null) {
             for (var d : pedido.getDetalles()) {

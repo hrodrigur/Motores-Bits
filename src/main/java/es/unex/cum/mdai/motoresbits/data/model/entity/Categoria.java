@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import java.util.*;
 
+// Entidad Categoria: nombre, descripción y relación con productos.
 @Entity
 @Table(name = "CATEGORIAS")
 public class Categoria {

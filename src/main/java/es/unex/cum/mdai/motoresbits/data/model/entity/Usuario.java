@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.*;
 
+// Entidad Usuario: datos del usuario, saldo, pedidos y reseñas.
 @Entity
 @Table(name = "USUARIOS")
 public class Usuario {

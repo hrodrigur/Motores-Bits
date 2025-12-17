@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+// Controlador para vistas de catálogo, categorías y detalle de producto.
 @Controller
 public class CatalogoController {
 
@@ -26,7 +27,6 @@ public class CatalogoController {
         return "catalogo";
     }
 
-    // ✅ Mantener /categoria/{id} (numérico)
     @GetMapping("/categoria/{id:\\d+}")
     public String verCategoriaPorId(@PathVariable Long id, Model model) {
         Categoria categoria = catalogoService.obtenerCategoria(id);
@@ -35,7 +35,6 @@ public class CatalogoController {
         return "categoria";
     }
 
-    // ✅ Nuevo /categoria/{nombre}
     @GetMapping("/categoria/{nombre}")
     public String verCategoriaPorNombre(@PathVariable String nombre, Model model) {
         Categoria categoria = catalogoService.obtenerCategoriaPorNombre(nombre);
@@ -44,7 +43,6 @@ public class CatalogoController {
         return "categoria";
     }
 
-    // ✅ Mantener /producto/{id} (numérico)
     @GetMapping("/producto/{id:\\d+}")
     public String productoDetallePorId(@PathVariable Long id, Model model) {
         Producto p = catalogoService.obtenerProducto(id);
@@ -54,7 +52,6 @@ public class CatalogoController {
         return "producto-detalle";
     }
 
-    // ✅ NUEVO: /producto/{referencia} (ej: MV8-001)
     @GetMapping("/producto/{referencia}")
     public String productoDetallePorReferencia(@PathVariable String referencia, Model model) {
         Producto p = catalogoService.obtenerProductoPorReferencia(referencia);

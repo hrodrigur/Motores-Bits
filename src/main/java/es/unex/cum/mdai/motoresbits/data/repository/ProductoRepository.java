@@ -17,7 +17,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     boolean existsByReferencia(String referencia);
 
-    // ✅ NUEVO
     Optional<Producto> findByReferenciaIgnoreCase(String referencia);
 
     @Modifying(clearAutomatically = true)

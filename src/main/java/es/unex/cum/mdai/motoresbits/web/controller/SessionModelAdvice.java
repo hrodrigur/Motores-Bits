@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.util.Map;
 
+// Añade atributos de sesión al modelo para ser usados por las vistas (usuario, carrito, saldo).
 @ControllerAdvice
 public class SessionModelAdvice {
 
@@ -24,14 +25,12 @@ public class SessionModelAdvice {
         Object uname = session.getAttribute("usuarioNombre");
         Object urole = session.getAttribute("usuarioRol");
 
-        // ✅ Refrescar saldo desde BD (solo si hay usuario y NO es ADMIN)
         if (uid != null && (urole == null || !"ADMIN".equals(urole.toString()))) {
             Long userId = (uid instanceof Long) ? (Long) uid : Long.valueOf(uid.toString());
             try {
                 var usuario = usuarioService.getById(userId);
                 session.setAttribute("usuarioSaldo", usuario.getSaldo());
             } catch (Exception ignored) {
-                // Si por lo que sea falla, dejamos el saldo de sesión tal cual
             }
         }
 
@@ -49,6 +48,6 @@ public class SessionModelAdvice {
 
         @SuppressWarnings("unchecked")
         Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cartItems");
-        model.addAttribute("cartItems", cart == null ? null : cart);
+        model.addAttribute("cartItems", cart);
     }
 }

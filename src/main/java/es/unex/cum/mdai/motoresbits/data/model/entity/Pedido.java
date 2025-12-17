@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+// Entidad Pedido: cabecera del pedido y sus líneas (detalles).
 @Entity
 @Table(name = "PEDIDOS")
 public class Pedido implements Serializable {

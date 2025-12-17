@@ -6,7 +6,6 @@ public class ProductoNoEncontradoException extends RuntimeException {
         super("No existe el producto con id=" + id);
     }
 
-    // ✅ NUEVO
     public ProductoNoEncontradoException(String msg) {
         super(msg);
     }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
 
+// Controlador de autenticación: login, registro y logout.
 @Controller
 public class AuthController {
 
@@ -38,12 +39,10 @@ public class AuthController {
             session.setAttribute("usuarioId", u.getId());
             session.setAttribute("usuarioNombre", u.getNombre());
 
-            // guardar rol en sesión para mostrar acciones de admin
             if (u.getRol() != null) {
                 session.setAttribute("usuarioRol", u.getRol().name());
             }
 
-            // ✅ guardar saldo en sesión para mostrarlo en el header
             session.setAttribute("usuarioSaldo", u.getSaldo());
 
             return "redirect:/";
@@ -62,8 +61,7 @@ public class AuthController {
     public String registroSubmit(@RequestParam String nombre,
                                  @RequestParam String email,
                                  @RequestParam String contrasena,
-                                 Model model,
-                                 HttpSession session) {
+                                 Model model) {
         try {
             usuarioService.registrarCliente(nombre, email, contrasena);
             return "redirect:/login?registered=true";

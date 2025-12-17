@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.math.BigDecimal;
 
+// Controlador para operaciones del usuario: perfil, saldo, pedidos y reseñas
 @Controller
 public class UsuarioController {
 
@@ -28,17 +29,11 @@ public class UsuarioController {
         this.resenaService = resenaService;
     }
 
-    // -------------------------
-    // Helpers
-    // -------------------------
     private boolean isAdmin(HttpSession session) {
         String rol = (String) session.getAttribute("usuarioRol");
         return rol != null && rol.equals("ADMIN");
     }
 
-    // -------------------------
-    // PERFIL
-    // -------------------------
     @GetMapping("/perfil")
     public String perfil(HttpSession session,
                          Model model,
@@ -79,9 +74,6 @@ public class UsuarioController {
         return "redirect:/perfil?saved=true";
     }
 
-    // -------------------------
-    // SALDO (CLIENTE: solo suma para sí mismo)
-    // -------------------------
     @GetMapping("/perfil/saldo")
     public String mostrarFormularioSaldo(HttpSession session, Model model) {
         Long usuarioId = (Long) session.getAttribute("usuarioId");
@@ -99,11 +91,10 @@ public class UsuarioController {
         Long usuarioId = (Long) session.getAttribute("usuarioId");
         if (usuarioId == null) return "redirect:/login";
 
-        // ✅ Cliente suma saldo a sí mismo (y si es admin, no usar esta ruta)
         if (isAdmin(session)) return "redirect:/perfil";
 
         try {
-            Usuario usuario = usuarioService.ajustarSaldo(usuarioId, cantidad); // delta positivo
+            Usuario usuario = usuarioService.ajustarSaldo(usuarioId, cantidad);
             session.setAttribute("usuarioSaldo", usuario.getSaldo());
             return "redirect:/perfil";
         } catch (Exception ex) {
@@ -113,9 +104,6 @@ public class UsuarioController {
         }
     }
 
-    // -------------------------
-    // PEDIDOS
-    // -------------------------
     @GetMapping("/mis-pedidos")
     public String misPedidos(HttpSession session, Model model) {
         Long usuarioId = (Long) session.getAttribute("usuarioId");
@@ -189,9 +177,6 @@ public class UsuarioController {
         }
     }
 
-    // -------------------------
-    // RESEÑAS
-    // -------------------------
     @PostMapping("/perfil/resena/eliminar")
     public String eliminarResenaPerfil(HttpSession session,
                                        @RequestParam Long idResena,
